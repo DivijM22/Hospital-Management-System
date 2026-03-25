@@ -1,0 +1,8 @@
+# Dependency directories
+node_modules/
+
+# Optional: Ignore environment variables and build files
+.env
+dist/
+build/
+.vscode/
