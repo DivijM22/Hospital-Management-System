@@ -51,7 +51,7 @@ async function getAvailableSlots(req,res){
             from appointment
             where doctor_id=? and appointment_date=?    
             and status!='cancelled'
-        `,[doctor_id,date]);
+        `,[doctor_id,date,date]);
 
         // for all slots, remove those which overlap with booked slots
         const availableSlots=totalSlots.filter(slot=>!bookedSlots.some(bookedSlot=>bookedSlot.start_time<slot.end && bookedSlot.end_time>slot.start));
@@ -104,7 +104,7 @@ async function getDoctors(req,res){
 }
 
 async function getAppointments(req,res){
-    const {date,patient_id}=req.query;
+    const {date,patient_id,status}=req.query;
     const {id : doctor_id}=req.user;
     try{
         var query=`
@@ -116,6 +116,12 @@ async function getAppointments(req,res){
                 and a.room_id=r.room_id
                 and a.doctor_id=?`;
         const params=[doctor_id];
+
+        if(status)
+        {
+            query+=' and a.status=?';
+            params.push(status);
+        }
         
         if(date) 
         {
@@ -130,10 +136,22 @@ async function getAppointments(req,res){
         }
         
         const [appointments]=await connectionPool.query(query,params);
+        const today=new Date();
+        today.setHours(0,0,0,0);
+        const updatedAppointments=appointments.map(appt=>{
+            const apptDate=new Date(appt.appointment_date);
+            apptDate.setHours(0,0,0,0);
+            var derivedStatus=appt.status;
+            if(appt.status==='scheduled' && apptDate<today) derivedStatus='missed';
+            return {
+                ...appt,
+                derived_status : derivedStatus
+            };
+        });
         return res.status(200).json({
             success : true,
             message : 'Successfully fetched appointments',
-            data : appointments
+            data : updatedAppointments
         });
     }catch(err){
         console.log(err);

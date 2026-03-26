@@ -1,6 +1,6 @@
 const express=require('express');
 const {handleAuth}=require('../middleware/auth');
-const {bookAppointment}=require('../controllers/receptionist.controller');
+const {bookAppointment,cancelAppointment,rescheduleAppointment}=require('../controllers/receptionist.controller');
 const {connectionPool}=require('../database_access');
 
 const router=express.Router();
@@ -55,6 +55,18 @@ async function checkAppointmentBook(req,res,next){
     }
 }
 
-router.post('/book_appointment',handleAuth,checkAppointmentBook,bookAppointment);
+function checkReceptionist(req,res,next){
+    const {user}=req;
+    if(user.role!=='receptionist')
+        return res.status(403).json({
+            success : false,
+            message : 'Unauthorized'
+    });
+    next();
+}
+
+router.post('/appointment',handleAuth,checkAppointmentBook,bookAppointment);
+router.patch('/appointment/:id/cancel',handleAuth,checkReceptionist,cancelAppointment);
+router.patch('/appointment/:id/reschedule',handleAuth,checkReceptionist,rescheduleAppointment);
 
 module.exports=router;
