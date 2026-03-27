@@ -10,11 +10,9 @@ async function getAvailableSlots(req,res){
     const days=['sun','mon','tue','wed','thu','fri','sat'];
     const day=days[new Date(date).getDay()];
     try{
-
         const [schedules]=await connectionPool.query(`
             select start_time,end_time from doctor_schedule
-            where doctor_id=? and day_of_week=?    
-        `,[doctor_id,day]);
+            where doctor_id=? and day_of_week=?`,[doctor_id,day]);
         if(schedules.length===0)
             return res.status(200).json({
                 success : true,
@@ -31,7 +29,7 @@ async function getAvailableSlots(req,res){
             const h=Math.floor(totalMinutes/60),m=totalMinutes%60;
             const hours=h.toString().padStart(2,'0');
             const minutes=m.toString().padStart(2,'0');
-            return `${hours}:${minutes}`;
+            return `${hours}:${minutes}:00`;
         }
 
         const totalSlots=[];
@@ -50,7 +48,7 @@ async function getAvailableSlots(req,res){
             select start_time,end_time
             from appointment
             where doctor_id=? and appointment_date=?    
-            and status!='cancelled'
+            and status='scheduled'
         `,[doctor_id,date,date]);
 
         // for all slots, remove those which overlap with booked slots
@@ -139,13 +137,14 @@ async function getAppointments(req,res){
         const today=new Date();
         today.setHours(0,0,0,0);
         const updatedAppointments=appointments.map(appt=>{
+            const derived_status=appt.status;
             const apptDate=new Date(appt.appointment_date);
             apptDate.setHours(0,0,0,0);
-            var derivedStatus=appt.status;
-            if(appt.status==='scheduled' && apptDate<today) derivedStatus='missed';
-            return {
+            if(apptDate<today && appt.status==='scheduled')
+                derived_status='missed';
+            return{
                 ...appt,
-                derived_status : derivedStatus
+                derived_status
             };
         });
         return res.status(200).json({
@@ -170,6 +169,26 @@ async function updateStatus(req,res){
         return res.status(400).json({
             success : false,
             message : 'Invalid status'
+        });
+    const today=new Date();
+    const [appointment]=await connectionPool.query(`
+        select appointment_date from appointment where appointment_id=? and doctor_id=?
+    `,[id,doctor_id]);
+    if(appointment.length===0)
+        return res.status(404).json({
+            success : false,
+            message : 'Appointment not found'
+        });
+    const date=appointment[0].appointment_date;
+    if(today<date && status==='completed')
+        return res.status(403).json({
+            success : false,
+            message : `Can't mark future appointment as completed`
+        });
+    if(today>date && status==='cancelled')
+        return res.status(403).json({
+            success : false,
+            message : `Can't mark past appointment as cancelled`
         });
     const conn=await connectionPool.getConnection();
     try{

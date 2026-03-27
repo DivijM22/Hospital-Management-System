@@ -51,13 +51,22 @@ async function registerUser(req,res){
                     return invalidInput(res);
                 }
                 await conn.query('insert into doctor (doctor_id,specialization,dept_id) values (?,?,?)',[userId,specialization,dept_id]);
-            }else await conn.query('insert into receptionist (receptionist_id) values (?)',[userId]);
+            }else{
+                const {desk_number}=formData;
+                if(!desk_number)
+                {
+                    await conn.rollback();
+                    return invalidInput(res);
+                }
+                await conn.query('insert into receptionist (receptionist_id,desk_number) values (?,?)',[userId,desk_number]);
+            }
             await conn.commit();
             return res.status(202).json({
                 success : true,
                 message : 'User successfully registered!'
             })
         }catch(err){
+            console.log(err);
             await conn.rollback();
             return res.status(500).json({
                 success : false,

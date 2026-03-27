@@ -21,6 +21,11 @@ async function checkAppointmentBook(req,res,next){
                 success : false,
                 message : 'Incomplete credentials'
             });
+        if(start_time>=end_time)
+            return res.status(400).json({
+                success : false,
+                message : 'Invalid time range'
+            });
         const [check_patient]=await connectionPool.query('select 1 from patient where patient_id=?',[patient_id]);
         if(check_patient.length==0)
             return res.status(404).json({
