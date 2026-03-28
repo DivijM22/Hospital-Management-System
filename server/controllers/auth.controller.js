@@ -7,7 +7,7 @@ const cookieOptions={
     secure : process.env.NODE_ENV==='production',
     sameSite : process.env.NODE_ENV==='production' ? 'strict' : 'lax',
     maxAge : 7*24*3600*1000
-}
+};
 
 async function registerUser(req,res){
     function invalidInput(res){
@@ -18,7 +18,7 @@ async function registerUser(req,res){
     }
     const {formData}=req.body;
     const {name,email,password,role}=formData;
-    if(!name || !email || !password || !role) return invalidInput(res);
+    if(!name || !email || !password) return invalidInput(res);
 
     try{
         const [check]=await connectionPool.query('select 1 from users where email=?',[email]);
@@ -34,32 +34,13 @@ async function registerUser(req,res){
             const hashedPassword=await bcrypt.hash(password,salt);
             const [result]=await conn.query('insert into users (name,email,password,role) values (?,?,?,?)',[name,email,hashedPassword,role]);
             const userId=result.insertId;
-            if(role==='patient')
+            const {gender,blood_group,dob}=formData;
+            if(!gender || !blood_group || !dob) 
             {
-                const {gender,blood_group,dob}=formData;
-                if(!gender || !blood_group || !dob) 
-                {
-                    conn.rollback();
-                    return invalidInput(res);
-                }
-                await conn.query('insert into patient (patient_id,gender,blood_group,dob) values (?,?,?,?)',[userId,gender,blood_group,dob]);
-            }else if(role==='doctor'){
-                const {specialization,dept_id}=formData;
-                if(!specialization || !dept_id) 
-                {
-                    conn.rollback();
-                    return invalidInput(res);
-                }
-                await conn.query('insert into doctor (doctor_id,specialization,dept_id) values (?,?,?)',[userId,specialization,dept_id]);
-            }else{
-                const {desk_number}=formData;
-                if(!desk_number)
-                {
-                    await conn.rollback();
-                    return invalidInput(res);
-                }
-                await conn.query('insert into receptionist (receptionist_id,desk_number) values (?,?)',[userId,desk_number]);
+                conn.rollback();
+                return invalidInput(res);
             }
+            await conn.query('insert into patient (patient_id,gender,blood_group,dob) values (?,?,?,?)',[userId,gender,blood_group,dob]);
             await conn.commit();
             return res.status(202).json({
                 success : true,
