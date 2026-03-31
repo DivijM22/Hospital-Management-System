@@ -1,16 +1,34 @@
 import LoginPage from './components/LoginPage';
 import { useState,useEffect } from 'react';
+import {Outlet} from 'react-router-dom';
+import httpErrorHandler from './httpErrorHandler';
 import axios from 'axios';
 
 export default function App(){
-    const [accessToken,setAccessToken]=useState();
-    const [refreshToken,setRefreshToken]=useState();
-
+    const [accessToken,setAccessToken]=useState(null);
+    const [loading,setLoading]=useState(true);
     useEffect(()=>{
-            
+        async function fetchData()
+        {
+            try{
+                const refreshRes=await axios.get('http://localhost:3000/api/auth/refresh',{withCredentials : true});
+                const {data}=refreshRes;
+                setAccessToken(data.accessToken);
+            }catch(err){
+                const error=httpErrorHandler(err);
+                if(error.status===401)
+                {
+                    alert("Session expired. Kindly Log in again.");
+                    setAccessToken(null);
+                }
+            }finally{
+                setLoading(false);
+            }
+        }
+        fetchData();
     },[]);
 
     return <div className="w-full h-screen flex-col">
-        <LoginPage/>
+        <Outlet context={{accessToken,setAccessToken,loading}}/>
     </div>
 }

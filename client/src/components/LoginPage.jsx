@@ -1,19 +1,71 @@
 import UserForm from "./UserForm";
-import {useState} from 'react';
+import {useState,useEffect} from 'react';
+import {useOutletContext,useNavigate} from 'react-router-dom';
+import axios from 'axios';
+import httpErrorHandler from "../httpErrorHandler";
 
 export default function LoginPage() {
   const [mode, setMode] = useState("login");
-
+  const {accessToken,setAccessToken}=useOutletContext();
+  const [formData,setFormData]=useState({
+    name : "",
+    email : "",
+    password : "",
+    gender : "",
+    blood_type: "",
+    dob : "",
+    submitted : false
+  });
   const greenBG = "bg-gradient-to-br from-[#1E6966] to-[#15514E]";
   const grayBG = "bg-gray-100";
+  const navigate=useNavigate();
+
+  useEffect(()=>{
+    if(!accessToken) return;
+    navigate('/dashboard',{replace : true});
+  },[accessToken]);
+
+  useEffect(()=>{
+    if(!formData.submitted) return;
+    async function fetchData()
+    {
+      try{
+        const loginRes=await axios.post("http://localhost:3000/api/auth/login",{formData},{
+          withCredentials : true,
+          headers:{
+            'Content-Type' : 'application/json',
+          }
+        });
+        const {data}=loginRes;
+        setAccessToken(data.accessToken);
+      }catch(err){
+        const error=httpErrorHandler(err);
+        if(err.status===401)
+        {
+          setFormData(prev=>({
+            ...prev,
+            submitted : false
+          }));
+          setAccessToken(null);
+          alert("Invalid email or password");
+        }else
+          alert(error.message);
+      }
+    
+    }
+    console.log(formData);
+    fetchData();
+  },[formData.submitted]);
 
   return (
     <div className="min-h-screen w-full flex">
 
       {/* LEFT PANEL */}
       <div className={`w-1/2 flex items-center justify-center relative overflow-hidden ${mode === "signup" ? greenBG : grayBG}`}>
-
         {mode === "signup" ? (
+          <>
+          <div className="absolute w-72 h-72 bg-white/10 rounded-full top-[-50px] left-[-50px]" />
+          <div className="absolute w-96 h-96 bg-white/5 rounded-full bottom-[-100px] right-[-100px]" />
           <div className="w-2/3 flex flex-col gap-6 text-white z-10">
             <h2 className="text-lg opacity-80">🏥 HMS</h2>
             <h1 className="text-4xl font-bold">Welcome Back 👋</h1>
@@ -28,17 +80,21 @@ export default function LoginPage() {
               Go to Log in
             </button>
           </div>
+          </>
         ) : (
-          <UserForm mode="login" />
+          <UserForm mode="login" formData={formData} setFormData={setFormData}/>
         )}
       </div>
 
       {/* RIGHT PANEL */}
-      <div className={`w-1/2 flex items-center justify-center ${mode === "signup" ? grayBG : greenBG}`}>
+      <div className={`w-1/2 flex items-center relative justify-center ${mode === "signup" ? grayBG : greenBG}`}>
 
         {mode === "signup" ? (
-          <UserForm mode="signup" />
+          <UserForm mode="signup" formData={formData} setFormData={setFormData}/>
         ) : (
+          <>
+          <div className="absolute w-72 h-72 bg-white/10 rounded-full top-[-50px] left-[-50px]" />
+          <div className="absolute w-96 h-96 bg-white/5 rounded-full bottom-[-100px] right-[-100px]" />
           <div className="w-2/3 flex flex-col gap-6 text-white">
             <h2 className="text-lg opacity-80">🏥 HMS</h2>
             <h1 className="text-4xl font-bold">New Here?</h1>
@@ -52,7 +108,7 @@ export default function LoginPage() {
             >
               Go to Signup
             </button>
-          </div>
+          </div></>
         )}
       </div>
 

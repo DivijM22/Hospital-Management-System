@@ -17,7 +17,7 @@ async function registerUser(req,res){
         });
     }
     const {formData}=req.body;
-    const {name,email,password,role}=formData;
+    const {name,email,password}=formData;
     if(!name || !email || !password) return invalidInput(res);
 
     try{
@@ -32,7 +32,7 @@ async function registerUser(req,res){
             await conn.beginTransaction();
             const salt=await bcrypt.genSalt(10);
             const hashedPassword=await bcrypt.hash(password,salt);
-            const [result]=await conn.query('insert into users (name,email,password,role) values (?,?,?,?)',[name,email,hashedPassword,role]);
+            const [result]=await conn.query(`insert into users (name,email,password,role) values (?,?,?,'patient')`,[name,email,hashedPassword]);
             const userId=result.insertId;
             const {gender,blood_group,dob}=formData;
             if(!gender || !blood_group || !dob) 
@@ -67,7 +67,8 @@ async function registerUser(req,res){
 
 async function loginUser(req,res){
     try{
-        const {email,password}=req.body;
+        const {formData}=req.body;
+        const {email,password}=formData;
         const [check]=await connectionPool.query('select * from users where email=?',[email]);
         if(check.length===0)
             return res.status(401).json({

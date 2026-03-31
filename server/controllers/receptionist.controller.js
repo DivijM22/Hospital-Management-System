@@ -49,6 +49,50 @@ async function bookAppointment(req,res){
     }
 }
 
+async function getAppointments(req,res){
+    const {doctor_name,patient_name,appointment_date,room_number}=req.query;
+    var query="select * from appointment_view";
+    const params=[];
+    const conditions=[];
+    
+    if(doctor_name){
+        conditions.push('doctor_name like ?');
+        params.push(`%${doctor_name}%`);
+    }
+
+    if(patient_name){
+        conditions.push('patient name like ?');
+        params.push(`%${patient_name}%`);
+    }
+
+    if(appointment_date){
+        conditions.push('appointment_date = ?');
+        params.push(appointment_date);
+    }
+
+    if(room_number){
+        conditions.push('room_number=?');
+        params.push(room_number);
+    }
+
+    if(conditions.length>0) query+= 'where ' + conditions.join(' and ');
+
+    try{
+        const [results]=await connectionPool.query(query,params);
+        return res.status(200).json({
+            success : true,
+            message : 'Successfully fetched appointments',
+            data : results
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }
+}
+
 async function cancelAppointment(req,res){
     const {id}=req.params;
     const {id : receptionist_id}=req.user;
@@ -172,4 +216,4 @@ async function rescheduleAppointment(req,res){
     }
 }
 
-module.exports={bookAppointment,cancelAppointment,rescheduleAppointment};
+module.exports={bookAppointment,cancelAppointment,rescheduleAppointment,getAppointments};

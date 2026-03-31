@@ -49,7 +49,7 @@ async function getAvailableSlots(req,res){
             from appointment
             where doctor_id=? and appointment_date=?    
             and status='scheduled'
-        `,[doctor_id,date,date]);
+        `,[doctor_id,date]);
 
         // for all slots, remove those which overlap with booked slots
         const availableSlots=totalSlots.filter(slot=>!bookedSlots.some(bookedSlot=>bookedSlot.start_time<slot.end && bookedSlot.end_time>slot.start));
