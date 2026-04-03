@@ -1,94 +1,131 @@
-import { useState,useEffect } from 'react';
-import {useOutletContext,useNavigate} from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import fetchWithAuth from '../fetchWithAuth';
-import AppointmentCard from './AppointmentCard';
 
-export default function PatientAppointments(props){
-    const {accessToken,setAccessToken}=useOutletContext();
-    const [appointments,setAppointments]=useState([]);
-    const navigate=useNavigate();
+export default function PatientAppointments() {
+    const { accessToken, setAccessToken } = useOutletContext();
+    const [appointments, setAppointments] = useState([]);
+    const navigate = useNavigate();
 
-    useEffect(()=>{
-        if(!accessToken) return;
-        async function fetchData()
-        {
-            const {data}=await fetchWithAuth({
-                url : 'http://localhost:3000/api/patient/appointments',
+    useEffect(() => {
+        if (!accessToken) return;
+
+        async function fetchData() {
+            const { data } = await fetchWithAuth({
+                url: 'http://localhost:3000/api/patient/appointments',
                 accessToken,
                 setAccessToken,
                 navigate,
-                method : 'GET',
-                options : {
-                    withCredentials : true
-                }
+                method: 'GET',
+                options: { withCredentials: true }
             });
-            setAppointments(data);
-            return data;
-        }
-        fetchData();
-    },[accessToken]);
 
-    useEffect(()=>{
-        if(appointments.length===0) return;
-        console.log(appointments);
-    },[appointments]);
+            setAppointments(data);
+        }
+
+        fetchData();
+    }, [accessToken]);
 
     return (
         <div className="flex flex-col w-full h-full p-6 gap-6 bg-gray-100">
 
-        {/* Page Title */}
-        <div>
-            <h1 className="text-3xl font-bold text-gray-800">
-            Dashboard
-            </h1>
-            <p className="text-gray-500 text-sm">
-            Overview of your recent activity
-            </p>
-        </div>
-
-        {/* Appointments Section */}
-        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col gap-4">
-
-            {/* Section Header */}
-            <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-800">
-                Appointments
-            </h2>
-
-            <span className="text-sm text-gray-400">
-                {appointments.length} total
-            </span>
-            </div>
-
-            {/* Content */}
-            {appointments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-                <p className="text-gray-600 font-medium">
-                No appointments found
-                </p>
-                <p className="text-gray-400 text-sm mt-1">
-                You're all caught up 🎉
+            {/* Header */}
+            <div>
+                <h1 className="text-3xl font-bold text-gray-800">
+                    Appointment History
+                </h1>
+                <p className="text-gray-500 text-sm">
+                    Overview of your appointments
                 </p>
             </div>
-            ) : (
-            <div className="flex flex-col gap-4 items-start max-h-[400px] overflow-y-auto pr-2">
-                {appointments.map((value, index) => (
-                <AppointmentCard
-                    key={index}
-                    patient_name={value.patient_name}
-                    doctor_name={value.doctor_name}
-                    doctor_specialization={value.doctor_specialization}
-                    start_time={value.start_time}
-                    end_time={value.end_time}
-                    room_number={value.room_number}
-                    room_type={value.room_type}
-                    appointment_date={value.appointment_date}
-                />
-                ))}
-            </div>
-            )}
 
+            {/* Table Container */}
+            <div className="bg-white rounded-xl shadow-md p-6">
+
+                {/* Title */}
+                <div className="flex justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">
+                        Appointments
+                    </h2>
+                    <span className="text-sm text-gray-400">
+                        {appointments.length} total
+                    </span>
+                </div>
+
+                {appointments.length === 0 ? (
+                    <div className="text-center py-10 text-gray-500">
+                        No appointments found
+                    </div>
+                ) : (
+                    <div className="max-h-[400px] overflow-y-auto border rounded-lg">
+
+                        <table className="min-w-full text-sm text-left">
+
+                            {/* Header */}
+                            <thead className="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-4 py-3">Doctor</th>
+                                    <th className="px-4 py-3">Specialization</th>
+                                    <th className="px-4 py-3">Date</th>
+                                    <th className="px-4 py-3">Start</th>
+                                    <th className="px-4 py-3">End</th>
+                                    <th className="px-4 py-3">Room</th>
+                                    <th className="px-4 py-3">Status</th>
+                                </tr>
+                            </thead>
+
+                            {/* Body */}
+                            <tbody className="divide-y">
+
+                                {appointments.map((apt, index) => (
+                                    <tr key={index} className="hover:bg-gray-50">
+
+                                        <td className="px-4 py-3 font-medium text-gray-900">
+                                            {apt.doctor_name}
+                                        </td>
+
+                                        <td className="px-4 py-3 text-gray-600">
+                                            {apt.doctor_specialization}
+                                        </td>
+
+                                        <td className="px-4 py-3 text-gray-600">
+                                            {apt.appointment_date}
+                                        </td>
+
+                                        <td className="px-4 py-3 text-gray-600">
+                                            {apt.start_time}
+                                        </td>
+
+                                        <td className="px-4 py-3 text-gray-600">
+                                            {apt.end_time}
+                                        </td>
+
+                                        <td className="px-4 py-3 text-gray-600">
+                                            {apt.room_number} ({apt.room_type})
+                                        </td>
+
+                                        <td className="px-4 py-3">
+                                            <span className={`px-2 py-1 rounded-md text-xs font-medium ${
+                                                apt.status === 'completed'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : apt.status === 'cancelled'
+                                                    ? 'bg-red-100 text-red-700'
+                                                    : apt.status === 'scheduled'
+                                                    ? 'bg-blue-100 text-blue-700'
+                                                    : 'bg-gray-100 text-gray-700'
+                                            }`}>
+                                                {apt.status}
+                                            </span>
+                                        </td>
+
+                                    </tr>
+                                ))}
+
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
-        </div>
-    )
+    );
 }

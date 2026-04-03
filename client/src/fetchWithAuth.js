@@ -8,7 +8,8 @@ export default async function fetchWithAuth({url,accessToken,setAccessToken,navi
             ...options,
             headers : {
                 ...(options?.headers || {}),
-                Authorization : `Bearer ${accessToken}`
+                Authorization : `Bearer ${accessToken}`,
+                'Content-Type' : 'application/json'
             },
             data : (method==='GET' ? undefined : body)
         };
@@ -19,12 +20,12 @@ export default async function fetchWithAuth({url,accessToken,setAccessToken,navi
         const error=httpErrorHandler(err);
         if(error.status===401){
             try{
-                const refreshRes=await axios.get("http://localhost:3000/auth/refresh",{withCredentials : true});
+                const refreshRes=await axios.get("http://localhost:3000/api/auth/refresh",{withCredentials : true});
+                console.log(refreshRes.data);
                 const newAccessToken=refreshRes.data.accessToken;
                 setAccessToken(newAccessToken);
                 config.headers.Authorization=`Bearer ${newAccessToken}`;
                 const res=await axios(config);
-                console.log("Bro, I had to refresh");
                 return res.data;
             }catch(refreshErr){
                 alert("Cannot refresh user session. Please log in again.");

@@ -73,10 +73,13 @@ export default function PatientDashboard(){
     return (
         <div className="w-full min-h-screen bg-gray-100 p-6">
 
-            {/* Page Title */}
-            <h1 className="text-3xl font-semibold text-gray-700 mb-6">
-                My Appointments
+            <h1 className="text-4xl font-semibold text-gray-700 mb-6">
+                My Dashboard
             </h1>
+            {/* Page Title */}
+            <h3 className="text-2xl font-semibold text-gray-700 mb-6">
+                Appointments
+            </h3>
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -122,10 +125,10 @@ export default function PatientDashboard(){
 
                 {/* Appointments List Placeholder */}
                     <div className="bg-white h-[400px] rounded-xl shadow flex items-start justify-center text-gray-400 overflow-y-auto">
-                           {appointments?.length===0 && (<div className="h-full flex items-center justify-center text-gray-400">
+                           {(appointments?.length===0 || mode===null) ? (<div className="flex w-full h-full border-2 flex items-center justify-center text-gray-400">
                                 Appointments will appear here
-                            </div>)}
-    
+                            </div>) :
+                                
                             <div className="w-full flex-wrap grid grid-cols-1 md:grid-cols-4 gap-4 align-content-start items-start">
                                 {
                                     (mode==="all") ? 
@@ -151,7 +154,7 @@ export default function PatientDashboard(){
                                         room_type={value?.room_type}
                                         appointment_date={value?.appointment_date}
                                         />
-                                    }) : completed?.map((value,index)=>{
+                                    }) : ( mode==="completed" && completed?.map((value,index)=>{
                                         return <AppointmentCard key={index}
                                         patient_name={value?.patient_name}
                                         doctor_name={value?.doctor_name}
@@ -162,9 +165,10 @@ export default function PatientDashboard(){
                                         room_type={value?.room_type}
                                         appointment_date={value?.appointment_date}
                                         />
-                                    }))
+                                    })))
                                 }
                             </div>
+                            }
                 
                     </div>
                 </div>
@@ -172,20 +176,20 @@ export default function PatientDashboard(){
                 {/* Right: Profile / Info Panel */}
                 <div className="w-80 hidden lg:block">
 
-                <div className="bg-white p-6 rounded-xl shadow flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center text-xl font-semibold mb-3">
-                    {userInfo?.name && userInfo?.name[0]}
-                    </div>
+                    <div className="bg-white p-6 rounded-xl shadow flex flex-col items-center text-center">
+                        <div className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center text-xl font-semibold mb-3">
+                            {userInfo?.name && userInfo?.name[0]}
+                        </div>
 
-                    <h2 className="font-semibold text-gray-700">{userInfo?.name ? userInfo?.name : null}</h2>
-                    <p className="text-sm text-gray-500 mb-4">{userInfo?.email}</p>
+                        <h2 className="font-semibold text-gray-700">{userInfo?.name ? userInfo?.name : null}</h2>
+                        <p className="text-sm text-gray-500 mb-4">{userInfo?.email}</p>
 
-                    <div className="w-full text-left text-sm text-gray-600 space-y-2">
-                    <p><span className="font-medium">Blood: </span>{userInfo?.blood_group}</p>
-                    <p><span className="font-medium">DOB: </span>{userInfo?.dob?.split('T')[0]}</p>
-                    <p><span className="font-medium">Gender: </span>{userInfo?.gender}</p>
+                        <div className="w-full text-left text-sm text-gray-600 space-y-2">
+                        <p><span className="font-medium">Blood: </span>{userInfo?.blood_group}</p>
+                        <p><span className="font-medium">DOB: </span>{userInfo?.dob?.split('T')[0]}</p>
+                        <p><span className="font-medium">Gender: </span>{userInfo?.gender}</p>
+                        </div>
                     </div>
-                </div>
 
                 </div>
 

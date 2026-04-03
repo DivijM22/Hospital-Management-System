@@ -48,9 +48,9 @@ app.get('/api/me',handleAuth,async(req,res)=>{
     const {id,role}=req.user;
     try{
         var roleRows=[];
-        const [userRows]=await connectionPool.query(`select name,email from users where user_id=?`,[id]);
+        const [userRows]=await connectionPool.query(`select user_id,name,email from users where user_id=?`,[id]);
         if(role==='patient')
-            [roleRows]=await connectionPool.query(`select gender,blood_group,dob from patient where patient_id=?`,[id]);
+            [roleRows]=await connectionPool.query(`select gender,blood_group,date_format(dob,'%Y-%m-%d') as dob from patient where patient_id=?`,[id]);
         else if(role==='doctor')
             [roleRows]=await connectionPool.query(`select name,dept_name,specialization from doctor_view where user_id=?`,[id]);
         const userData=userRows[0] || {};
@@ -69,6 +69,37 @@ app.get('/api/me',handleAuth,async(req,res)=>{
             success : false,
             message : 'Something went wrong. Please try again'
         });
+    }
+});
+
+app.patch('/api/me/edit',handleAuth,async(req,res)=>{
+    const formData=req.body;
+    if(formData.role==='doctor')
+        return res.status(403).json({
+            success : false,
+            message : 'Not authorized to change userinfo'
+        });
+    const conn=await connectionPool.getConnection();
+    try{
+        await conn.beginTransaction();
+        await conn.query(`update users set name=?,email=? where user_id=?`,[formData.name,formData.email,formData.user_id]);
+        if(formData.blood_group && formData.dob && formData.gender)
+            await conn.query(`update patient set blood_group=?, dob=?, gender=? where patient_id=?`,[formData.blood_group,formData.dob.split('T')[0],formData.gender,formData.user_id]);
+        await conn.commit();
+        return res.status(200).json({
+            success : false,
+            message : 'Successfully updated user info',
+            data : formData
+        });
+    }catch(err){
+        console.log(err);
+        await conn.rollback();
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }finally{
+        conn.release();
     }
 });
 

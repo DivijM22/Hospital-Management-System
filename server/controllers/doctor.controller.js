@@ -69,28 +69,27 @@ async function getAvailableSlots(req,res){
 }
 
 async function getDoctors(req,res){
-    const {dept}=req.query;
+    const {dept,searchQuery}=req.query;
     try{
-        var doctors=[];
-        if(dept)
-            [doctors]=await connectionPool.query(`
-                select u.name,u.email,d.specialization,dep.dept_name
-                from users u, doctor d, department dep
-                where u.user_id=d.doctor_id
-                and d.dept_id=dep.dept_id
-                and dep.dept_id=?
-            `,[dept]);
-        else
-            [doctors]=await connectionPool.query(`
-                select u.name,u.email,d.specialization,dep.dept_name
-                from users u, doctor d, department dep
-                where u.user_id=d.doctor_id
-                and d.dept_id=dep.dept_id
-            `);
+        var query='select * from doctor_view';
+        const conditions=[];
+        const params=[];
+        if(searchQuery)
+        {
+            conditions.push('(name like ? or specialization like ?)');
+            params.push(`%${searchQuery}%`,`%${searchQuery}%`);
+        }
+        if(dept){
+            conditions.push('dept_id=?');
+            params.push(dept);
+        }
+        if(conditions.length>0)
+            query+= ' where ' + conditions.join(' and ');
+        const [rows]=await connectionPool.query(query,params);
         return res.status(200).json({
             success : true,
             message : 'Successfully fetched doctors',
-            data : doctors
+            data : rows
         });
     }catch(err){
         console.log(err);
@@ -104,9 +103,17 @@ async function getDoctors(req,res){
 async function getAppointments(req,res){
     const {date,patient_id,status}=req.query;
     const {id : doctor_id}=req.user;
+    if(status)
+        if(!['scheduled','completed','cancelled','past'].includes(status))
+            return res.status(400).json({
+                success : false,
+                message : 'Invalid status'
+            })
     try{
         var query=`
-                select a.appointment_id,u1.name as patient_name,u1.email,u2.name as doctor_name,d.specialization as doctor_specialization,r.room_number,r.room_type,a.start_time,a.end_time,a.appointment_date,a.status
+                select a.appointment_id,u1.name as patient_name,u1.email,u2.name as doctor_name,
+                d.specialization as doctor_specialization,r.room_number,r.room_type,a.start_time,
+                a.end_time,DATE_FORMAT(a.appointment_date, '%Y-%m-%d') as appointment_date,a.status
                 from users u1, users u2, doctor d, appointment a, room r
                 where u1.user_id=a.patient_id
                 and u2.user_id=a.doctor_id
@@ -114,13 +121,16 @@ async function getAppointments(req,res){
                 and a.room_id=r.room_id
                 and a.doctor_id=?`;
         const params=[doctor_id];
-
         if(status)
         {
-            query+=' and a.status=?';
-            params.push(status);
+            if(status==='past' && !date){
+                query+=' and a.appointment_date<curdate()'
+            }else if(status!=='past'){
+                query+=' and a.status=?';
+                params.push(status);
+            }
         }
-        
+
         if(date) 
         {
             query+=' and a.appointment_date=?';
@@ -132,20 +142,18 @@ async function getAppointments(req,res){
             query+=' and a.patient_id=?';
             params.push(patient_id);
         }
-        
+        query+=' order by a.appointment_date asc';
         const [appointments]=await connectionPool.query(query,params);
         const today=new Date();
-        today.setHours(0,0,0,0);
+        const todayStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
         const updatedAppointments=appointments.map(appt=>{
-            const derived_status=appt.status;
-            const apptDate=new Date(appt.appointment_date);
-            apptDate.setHours(0,0,0,0);
-            if(apptDate<today && appt.status==='scheduled')
-                derived_status='missed';
-            return{
+            var derived_status=appt.status;
+            const d = appt.appointment_date;
+            if(appt.appointment_date<todayStr && appt.status==='scheduled') derived_status='missed';
+            return {
                 ...appt,
                 derived_status
-            };
+            }
         });
         return res.status(200).json({
             success : true,
@@ -171,27 +179,44 @@ async function updateStatus(req,res){
             message : 'Invalid status'
         });
     const today=new Date();
-    const [appointment]=await connectionPool.query(`
-        select appointment_date from appointment where appointment_id=? and doctor_id=?
-    `,[id,doctor_id]);
-    if(appointment.length===0)
-        return res.status(404).json({
-            success : false,
-            message : 'Appointment not found'
-        });
-    const date=appointment[0].appointment_date;
-    if(today<date && status==='completed')
-        return res.status(403).json({
-            success : false,
-            message : `Can't mark future appointment as completed`
-        });
-    if(today>date && status==='cancelled')
-        return res.status(403).json({
-            success : false,
-            message : `Can't mark past appointment as cancelled`
-        });
-    const conn=await connectionPool.getConnection();
+    const todayStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
     try{
+        const [appointment]=await connectionPool.query(`
+            select appointment_date,status from appointment where appointment_id=? and doctor_id=?
+        `,[id,doctor_id]);
+        if(appointment.length===0)
+            return res.status(404).json({
+                success : false,
+                message : 'Appointment not found'
+            });
+        const appointmentStr=new Date(appointment[0].appointment_date).toISOString().split('T')[0];
+        const currentStatus=appointment[0].status;
+        if(currentStatus!=='scheduled')
+            return res.status(409).json({
+                success : false,
+                message : `Can't update status`
+            });
+            
+        if(todayStr<appointmentStr && status==='completed')
+            return res.status(403).json({
+                success : false,
+                message : `Can't mark future appointment as completed`
+            });
+        if(todayStr>appointmentStr && status==='cancelled')
+            return res.status(403).json({
+                success : false,
+                message : `Can't mark past appointment as cancelled`
+            });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }
+    var conn;
+    try{
+        conn=await connectionPool.getConnection();
         await conn.beginTransaction();
         const [result]=await conn.query(`
             update appointment set status=? where appointment_id=? and doctor_id=? and status!=?`,[status,id,doctor_id,status]);
@@ -223,4 +248,64 @@ async function updateStatus(req,res){
     }
 }
 
-module.exports={getAvailableSlots,getDoctors,getAppointments,updateStatus};
+async function getSchedule(req,res){
+    const {doctor_id}=req.params;
+    try{
+        const [rows]=await connectionPool.query(`
+        select start_time,end_time,day_of_week from doctor_schedule where doctor_id=?`,[doctor_id]);
+        return res.status(200).json({
+            success : true,
+            message : 'Successfully fetched schedule',
+            data : rows
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }
+}
+
+async function getAvailableDoctors(req,res){
+    const {start_time,end_time,date,dept_id}=req.query;
+    if(!start_time || !end_time || !date)
+        return res.status(400).json({
+            success : false,
+            message : 'Query params- start_time, end_time, date required'
+        });
+    const DAYS=['sun','mon','tue','wed','thu','fri','sat','sun'];
+    const day = DAYS[new Date(date + 'T00:00:00').getDay()];
+    try{
+        var query=`select * from doctor_view where exists (
+                select 1 from doctor_schedule ds
+                where ds.day_of_week=?
+                and (ds.start_time<=? and ds.end_time>=?)
+                and ds.doctor_id=user_id) 
+                and not exists (
+                select 1 from appointment a
+                where a.doctor_id=user_id
+                and a.appointment_date=?
+                and (a.start_time<? and a.end_time>?))`;
+        const params=[day,start_time,end_time,date,end_time,start_time];
+        if(dept_id)
+        {
+            query+=' and dept_id=?';
+            params.push(dept_id);
+        }
+        const [rows]=await connectionPool.query(query,params);
+        return res.status(200).json({
+            success : true,
+            message : 'Successfully fetched available doctors',
+            data : rows
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }
+}
+
+module.exports={getAvailableSlots,getDoctors,getAppointments,updateStatus,getSchedule,getAvailableDoctors};

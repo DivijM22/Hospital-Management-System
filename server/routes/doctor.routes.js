@@ -1,6 +1,6 @@
 const express=require('express');
 const router=express.Router();
-const {getAvailableSlots,getDoctors,getAppointments,updateStatus}=require('../controllers/doctor.controller');
+const {getAvailableSlots,getDoctors,getAppointments,updateStatus,getSchedule,getAvailableDoctors}=require('../controllers/doctor.controller');
 const {handleAuth}=require('../middleware/auth');
 
 function checkDoctor(req,res,next){
@@ -19,10 +19,14 @@ router.get('/slots/available',handleAuth,getAvailableSlots);
 //Get all the doctors of a department id. Query parameter 'dept' is required.
 router.get('/doctors',handleAuth,getDoctors);
 
+router.get('/doctors/available',handleAuth,getAvailableDoctors);
+
 //Gets all appointments of the doctor. Takes query parameters status, date and patient_id to filter those appointments.
 router.get('/appointments',handleAuth,checkDoctor,getAppointments); 
 
 //Updates status of an appointment to either 'cancelled' or 'completed'. Takes appointment id as a search parameter.
 router.patch('/appointments/:id',handleAuth,checkDoctor,updateStatus);
+
+router.get('/schedule/:doctor_id',handleAuth,getSchedule);
 
 module.exports=router;

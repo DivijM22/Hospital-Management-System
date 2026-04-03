@@ -61,7 +61,7 @@ async function getAppointments(req,res){
     }
 
     if(patient_name){
-        conditions.push('patient name like ?');
+        conditions.push('patient_name like ?');
         params.push(`%${patient_name}%`);
     }
 
@@ -75,7 +75,7 @@ async function getAppointments(req,res){
         params.push(room_number);
     }
 
-    if(conditions.length>0) query+= 'where ' + conditions.join(' and ');
+    if(conditions.length>0) query+= ' where ' + conditions.join(' and ');
 
     try{
         const [results]=await connectionPool.query(query,params);
@@ -100,7 +100,9 @@ async function cancelAppointment(req,res){
     try{
         await conn.beginTransaction();
         const [result]=await conn.query(`
-            update appointment set status='cancelled' where appointment_id=? and receptionist_id=? and status='scheduled'    
+            update appointment set status='cancelled' 
+            where appointment_id=? and receptionist_id=? and status='scheduled' 
+            and date_format(appointment_date,'%Y-%m-%d')>=curdate()  
         `,[id,receptionist_id]);
         if(result.affectedRows===0)
         {
@@ -216,4 +218,33 @@ async function rescheduleAppointment(req,res){
     }
 }
 
-module.exports={bookAppointment,cancelAppointment,rescheduleAppointment,getAppointments};
+async function getAvailableRooms(req,res){
+    const {start_time,end_time,date}=req.query;
+    if(!start_time || !end_time || !date)
+        return res.status(400).json({
+            success : false,
+            message : 'Mandatory query params start_time, end_time and date not provided'
+        });
+    try{
+        const [rows]=await connectionPool.query(`
+        select r.room_id,r.room_number,r.room_type 
+        from room r where not exists (
+            select 1 from appointment a 
+            where a.room_id=r.room_id
+            and a.status='scheduled'
+            and (a.appointment_date=? and (a.start_time<? and a.end_time>?)))`,[date,end_time,start_time]);
+        return res.status(200).json({
+            success : true,
+            message : 'Successfully fetched rooms',
+            data : rows
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }
+}
+
+module.exports={bookAppointment,cancelAppointment,rescheduleAppointment,getAppointments,getAvailableRooms};

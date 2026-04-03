@@ -2,7 +2,7 @@ const {connectionPool}=require('../database_access');
 
 async function getAppointments(req,res){
     const {id : patient_id}=req.user;
-    const {status,doctor_id,date}=req.query;
+    const {status,doctor_id,date,type}=req.query;
     try{
         const params=[patient_id];
         var query=`select u1.name as patient_name, u2.name as doctor_name, d.specialization as doctor_specialization, r.room_number, r.room_type,a.start_time,a.end_time,a.appointment_date, a.appointment_id, a.status
@@ -75,4 +75,30 @@ async function getAppointmentCount(req,res){
     }
 }
 
-module.exports={getAppointments,getAppointmentCount};
+async function getPatients(req,res){
+    const {searchQuery}=req.query;
+    try{
+        var query= `select user_id,name,email,gender,blood_group,date_format(dob,'%Y-%m-%d') as dob from patient_view`;
+        const params=[];
+        if(searchQuery)
+        {
+            query+=' where name like ?';
+            params.push(`%${searchQuery}%`);
+        }
+        const [rows]=await connectionPool.query(query,params);
+        
+        return res.status(200).json({
+            success : true,
+            message : 'Successfully fetched patients',
+            data : rows
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again'
+        });
+    }   
+}
+
+module.exports={getAppointments,getAppointmentCount,getPatients};

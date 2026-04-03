@@ -1,0 +1,25 @@
+.horizontal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.horizontal-table th {
+  background-color: #f4f4f4;
+  color: #333;
+  font-weight: bold;
+  text-align: left;
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+.horizontal-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  white-space: nowrap; /* Prevents text from breaking into two lines */
+}
+
+.horizontal-table tr:hover {
+  background-color: #fafafa;
+}

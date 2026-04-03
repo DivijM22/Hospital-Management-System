@@ -1,6 +1,6 @@
 const express=require('express');
 const {handleAuth}=require('../middleware/auth');
-const {bookAppointment,cancelAppointment,rescheduleAppointment, getAppointments}=require('../controllers/receptionist.controller');
+const {bookAppointment,cancelAppointment,rescheduleAppointment, getAppointments,getAvailableRooms}=require('../controllers/receptionist.controller');
 const {connectionPool}=require('../database_access');
 
 const router=express.Router();
@@ -72,6 +72,7 @@ function checkReceptionist(req,res,next){
 
 router.post('/appointment',handleAuth,checkAppointmentBook,bookAppointment);
 router.get('/appointments',handleAuth,checkReceptionist,getAppointments);
+router.get('/rooms/available',handleAuth,checkReceptionist,getAvailableRooms);
 router.patch('/appointment/:id/cancel',handleAuth,checkReceptionist,cancelAppointment);
 router.patch('/appointment/:id/reschedule',handleAuth,checkReceptionist,rescheduleAppointment);
 

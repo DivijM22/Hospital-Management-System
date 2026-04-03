@@ -14,31 +14,30 @@ import {
 } from "lucide-react";
 
 export default function Sidebar(props) {
-  const [collapsed, setCollapsed] = useState(false);
-  const { role } = props;
+  const { role,handleLogout,setCollapsed,collapsed} = props;
   const navigate=useNavigate();
 
   const menus = {
     patient: [
       { name: "Dashboard", icon: Home, navigate : '/dashboard'},
       { name: "Appointment History", icon: History , navigate : '/dashboard/patient/appointments'},
-      { name: "Search Doctors", icon: Search, navigate : '/'},
-      { name: "Profile", icon: User, navigate : '/'},
+      { name: "Search Doctors", icon: Search, navigate : '/dashboard/patient/search/doctors'},
+      { name: "Profile", icon: User, navigate : '/dashboard/profile'},
     ],
 
     receptionist: [
-      { name: "Dashboard", icon: Home},
-      { name: "Book Appointment", icon: CalendarPlus },
-      { name: "Cancel Appointment", icon: CalendarX },
-      { name: "Reschedule Appointment", icon: CalendarClock },
-      { name: "Profile", icon: User },
+      { name: "Dashboard", icon: Home, navigate: '/dashboard'},
+      { name: "Book Appointment", icon: CalendarPlus, navigate: '/dashboard/receptionist/book'},
+      { name: "Cancel Appointment", icon: CalendarX, navigate: '/dashboard/receptionist/cancel' },
+      { name: "Reschedule Appointment", icon: CalendarClock, navigate : '/dashboard/receptionist/reschedule'},
+      { name: "Profile", icon: User, navigate : '/dashboard/profile'},
     ],
 
     doctor: [
-      { name: "Dashboard", icon: Home },
-      { name: "Search Patient", icon: Users },
-      { name: "Get Appointments", icon: History },
-      { name: "Profile", icon: User },
+      { name: "Dashboard", icon: Home, navigate: '/dashboard'},
+      { name: "Search Patient", icon: Users, navigate: '/dashboard/doctor/search/patients'},
+      { name: "Manage Appointments", icon: CalendarClock, navigate : '/dashboard/doctor/appointments/manage'},
+      { name: "Profile", icon: User, navigate : '/dashboard/profile' },
     ],
   };
 
@@ -46,7 +45,7 @@ export default function Sidebar(props) {
 
   return (
     <div
-      className={`h-screen bg-[#1E6966] text-white transition-all duration-300 
+      className={`h-screen bg-[#1E6966] text-white transition-all duration-300 fixed
       ${collapsed ? "w-[5vw]" : "w-[20vw]"} flex flex-col`}
     >
       {/* Top Section */}
@@ -76,7 +75,7 @@ export default function Sidebar(props) {
 
       {/* Bottom Section */}
       <div className="p-4 border-t border-white/20">
-        <button className="flex items-center gap-4 w-full p-3 rounded-lg hover:bg-red-500/70 transition">
+        <button className="flex items-center gap-4 w-full p-3 rounded-lg hover:bg-red-500/70 transition" onClick={e=>handleLogout()}>
           <LogOut size={20} />
           {!collapsed && <span>Logout</span>}
         </button>

@@ -135,7 +135,7 @@ async function refreshUser(req,res){
         const refresh_token=jwt.sign(payload,process.env.JWT_REFRESH_SECRET,{expiresIn : 7*24*3600});
 
         res.cookie('refreshToken',refresh_token,cookieOptions);
-
+        
         return res.status(200).json({
             success : true,
             message : 'Successfully refreshed.',
