@@ -13,8 +13,13 @@ async function getAppointments(req,res){
                     and a.room_id=r.room_id
                     and u1.user_id=?`
         if(status){
-            query+=' and a.status=?'
-            params.push(status);
+            if(status==='upcoming'){
+                query+=' and a.status=? and timestamp(a.appointment_date,a.start_time)>now()'
+                params.push('scheduled');
+            }else{
+                query+=' and a.status=?'
+                params.push(status);
+            }
         }
         if(doctor_id){
             query+=' and u2.user_id=?';
@@ -48,13 +53,14 @@ async function getAppointmentCount(req,res){
     try{
         var data;
         if(status==='missed'){
-            const [missed]=await connectionPool.query(`select count(*) as appointment_count from appointment where patient_id=? and status='scheduled'
-            and ( appointment_date<curdate() or (appointment_date=curdate() and end_time<curtime()))`,[patient_id]);
+            const [missed]=await connectionPool.query(`
+            select count(*) as appointment_count
+            from appointment where patient_id=? and (status='scheduled' and timestamp(appointment_date,end_time)<now())`,[patient_id]);
             data=missed[0];   
         }else if(status==='upcoming'){
             const [upcoming]=await connectionPool.query(`
-                select count(*) as appointment_count from appointment where patient_id=? and appointment_date>curdate() 
-                or (appointment_date=curdate() and start_time>curtime())`,[patient_id]);
+                select count(*) as appointment_count from appointment where patient_id=? 
+                and (status='scheduled' and timestamp(appointment_date,start_time)>now())`,[patient_id]);
             data=upcoming[0];
         }else{
             const [count]=await connectionPool.query(`select count(*) as appointment_count 

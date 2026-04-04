@@ -30,4 +30,14 @@ async function handleAccess(req,res,next){
     next();
 }
 
-module.exports={handleAuth,handleAccess};
+async function checkAdmin(req,res,next){
+    const {user}=req;
+    if(user.role!=='admin')
+        return res.status(403).json({
+            success : false,
+            message : 'Admin access required'
+        });
+    next();
+}
+
+module.exports={handleAuth,handleAccess,checkAdmin};

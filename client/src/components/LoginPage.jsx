@@ -12,7 +12,7 @@ export default function LoginPage() {
     email : "",
     password : "",
     gender : "",
-    blood_type: "",
+    blood_group: "",
     dob : "",
     submitted : false
   });
@@ -30,14 +30,25 @@ export default function LoginPage() {
     async function fetchData()
     {
       try{
-        const loginRes=await axios.post("http://localhost:3000/api/auth/login",{formData},{
-          withCredentials : true,
-          headers:{
-            'Content-Type' : 'application/json',
-          }
-        });
-        const {data}=loginRes;
-        setAccessToken(data.accessToken);
+        if(mode==="login"){
+          const loginRes=await axios.post("http://localhost:3000/api/auth/login",{formData},{
+            withCredentials : true,
+            headers:{
+              'Content-Type' : 'application/json',
+            }
+          });
+          const {data}=loginRes;
+          setAccessToken(data.accessToken);
+        }else{
+          const signUpRes=await axios.post("http://localhost:3000/api/auth/register",{formData},{
+            withCredentials : true,
+            headers : {
+              'Content-Type' : 'application/json'
+            }
+          });
+          alert("User successfully registered! Please log in to continue.");
+          setMode("login");
+        }
       }catch(err){
         const error=httpErrorHandler(err);
         if(err.status===401)
@@ -50,6 +61,8 @@ export default function LoginPage() {
           alert("Invalid email or password");
         }else
           alert(error.message);
+      }finally{
+        setFormData(prev=>({...prev,submitted : false}));
       }
     
     }

@@ -65,6 +65,65 @@ async function registerUser(req,res){
     }
 }
 
+async function registerStaff(req,res){
+    const {name,email,password,role,roleData}=req.body;
+    if(role==='patient' || role==='admin')
+        return res.status(403).json({
+            success : false,
+            message : 'Only doctor and receptionist allowed to register.'
+        });
+    function incompleteCredentials(res){
+        return res.status(400).json({
+            success : false,
+            messsage : 'Incomplete credentials'
+        });
+    }
+    if(!name || !email || !password || !role || !roleData) return incompleteCredentials(res);
+    if(role==='doctor')
+        if(!roleData.specialization || !roleData.dept_id) return incompleteCredentials(res);
+    if(role==='receptionist')
+        if(!roleData.desk_number) return incompleteCredentials(res);
+    var conn;
+    try{
+        conn=await connectionPool.getConnection();
+        await conn.beginTransaction();
+        const salt=await bcrypt.genSalt();
+        const hashedPassword=await bcrypt.hash(password,salt);
+        const [result]=await conn.query(`
+            insert into users (name,email,password,role)
+            select ?,?,?,?
+            where not exists (select 1 from users where email=?)`,[name,email,hashedPassword,role,email]);
+        if(result.affectedRows===0)
+            return res.status(409).json({
+                success : false,
+                message : 'Email already in use'
+            });
+        const user_id=result.insertId;
+        if(role==='doctor'){
+            const {specialization,dept_id}=roleData;
+            await conn.query(`
+                insert into doctor (doctor_id,specialization,dept_id) values (?,?,?)`,[user_id,specialization,dept_id]);
+        }else{
+            const {desk_number}=roleData;
+            await conn.query(`
+                insert into receptionist (receptionist_id,desk_number) values (?,?)`,
+            [user_id,desk_number]);
+        }
+        await conn.commit();
+        return res.status(202).json({
+            success : true,
+            message : 'Successfully created staff account'
+        });
+    }catch(err){
+        console.log(err);
+        await conn.rollback();
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }
+}
+
 async function loginUser(req,res){
     try{
         const {formData}=req.body;
@@ -75,7 +134,7 @@ async function loginUser(req,res){
                 success : false,
                 message : 'Invalid email or password'
             });
-        const matched= process.env.TESTING==='doctor' ? password===check[0]['password'] : await bcrypt.compare(password,check[0]['password']);
+        const matched=await bcrypt.compare(password,check[0]['password']);
         
         if(!matched)
             return res.status(401).json({
@@ -172,4 +231,4 @@ async function logoutUser(req,res){
 }
 
 
-module.exports={registerUser,loginUser,refreshUser,logoutUser}
+module.exports={registerUser,loginUser,refreshUser,logoutUser,registerStaff}

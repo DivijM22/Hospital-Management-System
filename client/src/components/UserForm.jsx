@@ -54,7 +54,7 @@ export default function UserForm(props) {
             <div className="mt-6 space-y-4">
                 <select
                 onChange={handleChange}
-                name="blood_type"
+                name="blood_group"
                 defaultValue=""
                 className="w-full px-4 py-2 border rounded-lg"
                 required
@@ -90,9 +90,9 @@ export default function UserForm(props) {
                 <option value="" disabled hidden>
                     Select Gender
                 </option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+                <option value="O">Other</option>
                 </select>
             </div>
             </>

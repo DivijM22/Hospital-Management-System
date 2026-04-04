@@ -43,7 +43,7 @@ export default function PatientDashboard(){
                 helper('http://localhost:3000/api/patient/appointments/count/missed'),
                 helper('http://localhost:3000/api/me'),
                 helper('http://localhost:3000/api/patient/appointments'),
-                helper("http://localhost:3000/api/patient/appointments?status=upcoming"),
+                helper("http://localhost:3000/api/patient/appointments?status=scheduled"),
                 helper("http://localhost:3000/api/patient/appointments?status=completed")
             ]);
             console.log(upcomingRes);

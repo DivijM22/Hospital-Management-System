@@ -1,8 +1,16 @@
 # Dependency directories
 node_modules/
 
-# Optional: Ignore environment variables and build files
+# Environment variables
 .env
+
+# Build files
 dist/
 build/
+
+# Editor configuration
 .vscode/
+
+# Database dumps and sensitive scripts
+hospital_db.sql
+server/seedAdmin.js
