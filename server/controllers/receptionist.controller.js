@@ -2,31 +2,50 @@ const {connectionPool}=require('../database_access');
 
 async function bookAppointment(req,res){
     const {id : receptionist_id}=req.user;
-    const {patient_id,doctor_id,room_id,date,start_time,end_time}=req.body;
+    const {patient_id,doctor_id,room_id,date,start_time,end_time,request_id}=req.body;
     const days=['sun','mon','tue','wed','thu','fri','sat'];
     const day=days[new Date(date).getDay()];
-    const conn=await connectionPool.getConnection();
+    var conn;
     try{
+        conn=await connectionPool.getConnection();
         await conn.beginTransaction();
+
         const [result]=await conn.query(`
             insert into appointment (patient_id,doctor_id,room_id,start_time,end_time,receptionist_id,appointment_date)
             select ?,?,?,?,?,?,?
             where exists ( select 1 from doctor_schedule 
                 where doctor_id=? and day_of_week=? 
-                and start_time<? and end_time>?
+                and start_time<=? and end_time>=?
             ) and not exists ( select 1 from appointment
                 where doctor_id=? and appointment_date=? and start_time<? and end_time>? and status='scheduled'
             ) and not exists ( select 1 from appointment
                 where room_id=? and appointment_date=? and start_time<? and end_time>? and status='scheduled')`,
-            [patient_id,doctor_id,room_id,start_time,end_time,receptionist_id,date,doctor_id,day,end_time,start_time,doctor_id,date,end_time,start_time,room_id,date,end_time,start_time]);
+            [patient_id,doctor_id,room_id,start_time,end_time,receptionist_id,date,doctor_id,day,start_time,end_time,doctor_id,date,end_time,start_time,room_id,date,end_time,start_time]);
         if(result.affectedRows===0)
         {
             await conn.rollback();
             return res.status(409).json({
                 success : false,
-                message : 'No available slot found.'
+                message : 'No available slot found or booked by another receptionist'
             });
         }
+
+        
+        if(request_id){
+            const [result]=await conn.query(
+                `update requests set status='approved',
+                resolved_by=? where req_id=? and status='pending'`,
+                [receptionist_id,request_id]);
+            if(result.affectedRows===0)
+            {
+                await conn.rollback();
+                return res.status(409).json({
+                    success : false,
+                    message : 'Request was already approved by another receptionist or does not exist'
+                });
+            }
+        }
+
         const appointment_id=result.insertId;
         await conn.query(`
             insert into audit (appointment_id,action) values (?,?)    
@@ -161,21 +180,16 @@ async function rescheduleAppointment(req,res){
         const {doctor_id,room_id,patient_id}=appointment[0];
         const DAYS=['sun','mon','tue','wed','thu','fri','sat'];
         const day=DAYS[new Date(date).getDay()];
-        const [schedules]=await conn.query(`select start_time,end_time from doctor_schedule where doctor_id=? and day_of_week=?`,[doctor_id,day]);
-        const matched=schedules.some(s=>s.start_time<end_time && s.end_time>start_time);
-
-        if(!matched)
-        {
-            await conn.rollback();
-            return res.status(409).json({
-                success : false,
-                message : 'Doctor not available'
-            });
-        }
 
         const [result]=await conn.query(`
             update appointment set start_time=?, end_time=?, appointment_date=? 
             where appointment_id=?
+            and exists ( select 1 from (
+                select 1 from doctor_schedule
+                where doctor_id=?
+                and day_of_week=?
+                and start_time<=?
+                and end_time>=?) as t)
             and not exists ( select 1 from (
                 select 1 from appointment 
                 where doctor_id=? 
@@ -190,7 +204,7 @@ async function rescheduleAppointment(req,res){
                 and appointment_id!=?
                 and status='scheduled'
                 and start_time<? and end_time>?) as temp2)`
-        ,[start_time,end_time,date,id,doctor_id,date,id,end_time,start_time,room_id,date,id,end_time,start_time]);
+        ,[start_time,end_time,date,id,doctor_id,day,start_time,end_time,doctor_id,date,id,end_time,start_time,room_id,date,id,end_time,start_time]);
         if(result.affectedRows===0)
         {
             await conn.rollback();
@@ -247,4 +261,62 @@ async function getAvailableRooms(req,res){
     }
 }
 
-module.exports={bookAppointment,cancelAppointment,rescheduleAppointment,getAppointments,getAvailableRooms};
+async function getRequests(req,res){
+    const {status}=req.query;
+    if(status)
+        if(!['pending','rejected','approved'].includes(status))
+            return res.status(400).json({
+                success : false,
+                message : 'Invalid status'
+            });
+    var query='select * from requests';
+    const params=[];
+    if(status) 
+    {
+        query+=' where status=?';
+        params.push(status);
+    }
+    try{
+        const [rows]=await connectionPool.query(query,params);
+        return res.status(200).json({
+            success : true,
+            message : 'Successfully fetched appointments',
+            data : rows
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }
+}
+
+
+async function rejectRequest(req,res){
+    const {id:receptionist_id}=req.user;
+    const {id : req_id}=req.body;
+    try{
+        const [result]=await connectionPool.query(`
+        update requests set status='rejected',resolved_by=? where req_id=? and status='pending'`,[receptionist_id,req_id]);
+
+        if(result.affectedRows===0)
+            return res.status(409).json({
+                success : false,
+                message : 'No request exists or request is processed by another receptionist'
+            });
+        
+        return res.status(200).json({
+            success : true,
+            message : 'Successfully rejected appointment request'
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again.'
+        });
+    }
+}
+
+module.exports={bookAppointment,cancelAppointment,rescheduleAppointment,getAppointments,getAvailableRooms,getRequests,rejectRequest};

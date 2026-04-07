@@ -82,15 +82,22 @@ async function getAppointmentCount(req,res){
 }
 
 async function getPatients(req,res){
-    const {searchQuery}=req.query;
+    const {searchQuery,patient_id}=req.query;
     try{
         var query= `select user_id,name,email,gender,blood_group,date_format(dob,'%Y-%m-%d') as dob from patient_view`;
         const params=[];
+        const conditions=[];
         if(searchQuery)
         {
-            query+=' where name like ?';
+            conditions.push('name like ?');
             params.push(`%${searchQuery}%`);
         }
+        if(patient_id)
+        {
+            conditions.push('user_id=?');
+            params.push(patient_id);
+        }
+        query+= ' where ' + conditions.join(' and ');
         const [rows]=await connectionPool.query(query,params);
         
         return res.status(200).json({
@@ -107,4 +114,28 @@ async function getPatients(req,res){
     }   
 }
 
-module.exports={getAppointments,getAppointmentCount,getPatients};
+async function makeRequest(req,res){
+    const {id : patient_id}=req.user;
+    const {doctor_id}=req.body;
+    try{
+        const [check]=await connectionPool.query(`select 1 from doctor where doctor_id=?`,[doctor_id]);
+        if(check.length===0)
+            return res.status(400).json({
+                success : false,
+                message : 'Invalid doctor_id'
+            });
+        await connectionPool.query(`insert into requests (patient_id,doctor_id) values (?,?)`,[patient_id,doctor_id]);
+        return res.status(200).json({
+            success : true,
+            message : 'Successfully made appointment request'
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : 'Something went wrong. Please try again'
+        });
+    }
+}
+
+module.exports={getAppointments,getAppointmentCount,getPatients,makeRequest};

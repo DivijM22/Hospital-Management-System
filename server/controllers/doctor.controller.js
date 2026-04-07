@@ -69,7 +69,7 @@ async function getAvailableSlots(req,res){
 }
 
 async function getDoctors(req,res){
-    const {dept,searchQuery}=req.query;
+    const {dept,searchQuery,doctor_id}=req.query;
     try{
         var query='select * from doctor_view';
         const conditions=[];
@@ -82,6 +82,10 @@ async function getDoctors(req,res){
         if(dept){
             conditions.push('dept_id=?');
             params.push(dept);
+        }
+        if(doctor_id){
+            conditions.push('user_id=?');
+            params.push(doctor_id);
         }
         if(conditions.length>0)
             query+= ' where ' + conditions.join(' and ');
