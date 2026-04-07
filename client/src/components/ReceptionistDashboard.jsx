@@ -306,7 +306,7 @@ export default function ReceptionistDashboard() {
                                         {/* 🔥 NEW: Action Buttons */}
                                         <div className="mt-5 pt-4 border-t border-gray-200 flex gap-3">
                                             <button
-                                                onClick={() => navigate('/dashboard/receptionist/book', {
+                                                onClick={() => navigate(`/dashboard/receptionist/book?request_id=${req.req_id}`, {
                                                     state: {
                                                         prefill: {
                                                             patient: req.patient,

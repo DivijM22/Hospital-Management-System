@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext, useNavigate,useSearchParams} from 'react-router-dom';
 import fetchWithAuth from '../fetchWithAuth';
 import PatientCard from './PatientCard';
 import DoctorCard from './DoctorCard';
@@ -40,6 +40,8 @@ export default function BookAppointment() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const [searchParams] = useSearchParams();
+    const request_id = searchParams.get('request_id');
     const searchRef = useRef();
 
     // ─── API helpers ──────────────────────────────────────────────────────────
@@ -124,6 +126,7 @@ export default function BookAppointment() {
                     date,
                     start_time: selectedSlot.start,
                     end_time: selectedSlot.end,
+                    request_id
                 },
                 options: { withCredentials: true }
             });
