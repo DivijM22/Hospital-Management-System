@@ -295,6 +295,7 @@ export default function BookAppointment() {
                                                 doctor_specialization={d.specialization}
                                                 doctor_department={d.dept_name}
                                                 setSelectedDoctor={setSelectedDoctor}
+                                                button_text="Select"
                                             />
                                         </div>
                                     ))}

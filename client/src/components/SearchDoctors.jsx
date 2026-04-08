@@ -2,6 +2,7 @@ import DoctorCard from "./DoctorCard";
 import {useOutletContext,useNavigate} from "react-router-dom";
 import {useState,useEffect} from 'react';
 import fetchWithAuth from "../fetchWithAuth";
+import httpErrorHandler from "../httpErrorHandler";
 
 export default function SearchDoctors(){
     const {accessToken,setAccessToken}=useOutletContext();
@@ -69,6 +70,30 @@ export default function SearchDoctors(){
         setSearch("");
     }
 
+    async function onRequest(doctorId)
+    {
+        try{
+            const res=await fetchWithAuth({
+                url : 'http://localhost:3000/api/patient/request',
+                method : 'POST',
+                accessToken,
+                setAccessToken,
+                navigate,
+                options:{
+                    withCredentials : true
+                },
+                body:{doctor_id : doctorId}
+            });
+            console.log(res);
+            alert("Successfully made request.");
+            navigate("/");
+        console.log(res);
+        }catch(err){
+            const error=httpErrorHandler(err);
+            alert(err.message);
+        }
+    }
+
     return (
         <div className="flex flex-col items-start w-full p-6 min-h-screen bg-gray-50">
             <div className="mb-6">
@@ -90,9 +115,13 @@ export default function SearchDoctors(){
 
                 <select className="px-4 py-2 border rounded-lg bg-white" value={dept} onChange={e=>setDept(e.target.value)}>
                     <option value={""}>All Departments</option>
-                    <option value="orthopedics">Orthopedics</option>
-                    <option value="cardiology">Cardiology</option>
-                    <option value="dermatology">Dermatology</option>
+                    <option value={1}>Cardiology</option>
+                    <option value={2}>Orthopedics</option>
+                    <option value={3}>Dermatology</option>
+                    <option value={4}>Pediatrics</option>
+                    <option value={5}>Neurology</option>
+                    <option value={6}>General Surgery</option>
+                    <option value={7}>Psychiatry</option>
                 </select>
                 <button onClick={handleClick} className="px-5 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">Search</button>
             </div>
@@ -115,6 +144,8 @@ export default function SearchDoctors(){
                                     doctor_department={value.dept_name}
                                     doctor_id={value.user_id}
                                     setSelectedDoctor={setSelectedDoctor}
+                                    button_text="View availability"
+                                    onRequest={onRequest}
                                 />
                             })
                         }

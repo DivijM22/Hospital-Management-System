@@ -117,10 +117,6 @@ export default function PatientDashboard(){
                         Completed
                     </button>
                     </div>
-
-                    <button className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm">
-                    Book Appointment
-                    </button>
                 </div>
 
                 {/* Appointments List Placeholder */}
@@ -192,7 +188,6 @@ export default function PatientDashboard(){
                     </div>
 
                 </div>
-
             </div>
             </div>
     );

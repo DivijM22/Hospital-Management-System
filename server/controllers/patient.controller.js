@@ -118,11 +118,17 @@ async function makeRequest(req,res){
     const {id : patient_id}=req.user;
     const {doctor_id}=req.body;
     try{
-        const [check]=await connectionPool.query(`select 1 from doctor where doctor_id=?`,[doctor_id]);
+        var [check]=await connectionPool.query(`select 1 from doctor where doctor_id=?`,[doctor_id]);
         if(check.length===0)
             return res.status(400).json({
                 success : false,
                 message : 'Invalid doctor_id'
+            });
+        [check]=await connectionPool.query(`select 1 from requests where patient_id=? and doctor_id=? and status='pending'`,[patient_id,doctor_id]);
+        if(check.length>0)
+            return res.status(409).json({
+                success : false,
+                message : 'Request already pending.'
             });
         await connectionPool.query(`insert into requests (patient_id,doctor_id) values (?,?)`,[patient_id,doctor_id]);
         return res.status(200).json({
