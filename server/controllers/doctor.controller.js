@@ -31,16 +31,23 @@ async function getAvailableSlots(req,res){
             const minutes=m.toString().padStart(2,'0');
             return `${hours}:${minutes}:00`;
         }
+        const now=new Date();
+        const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        const isToday = (date === todayStr);
+        // Convert current time to minutes for easy math (e.g., 2:30 PM = 14 * 60 + 30 = 870)
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
         const totalSlots=[];
         for(const schedule of schedules){
             var startMinutes=timeToMinutes(schedule['start_time']);
             var endMinutes=timeToMinutes(schedule['end_time']);
             while(startMinutes+15<=endMinutes){
-                const start=minutesToTime(startMinutes);
-                const end=minutesToTime(startMinutes+15);
-                totalSlots.push({start,end});
-                startMinutes+=15;
+            if (!isToday || startMinutes >= currentMinutes) {
+                        const start = minutesToTime(startMinutes);
+                        const end = minutesToTime(startMinutes + 15);
+                        totalSlots.push({start, end});
+                    }
+                    startMinutes += 15;
             }
         }
 
@@ -52,7 +59,7 @@ async function getAvailableSlots(req,res){
         `,[doctor_id,date]);
 
         // for all slots, remove those which overlap with booked slots
-        const availableSlots=totalSlots.filter(slot=>!bookedSlots.some(bookedSlot=>bookedSlot.start_time<slot.end && bookedSlot.end_time>slot.start));
+        const availableSlots=totalSlots.filter(slot=>!bookedSlots.some(bookedSlot=>(bookedSlot.start_time<slot.end && bookedSlot.end_time>slot.start)));
 
         return res.status(200).json({
             success : true,
