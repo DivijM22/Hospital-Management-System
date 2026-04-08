@@ -3,6 +3,14 @@ const {connectionPool}=require('../database_access');
 async function bookAppointment(req,res){
     const {id : receptionist_id}=req.user;
     const {patient_id,doctor_id,room_id,date,start_time,end_time,request_id}=req.body;
+    const appointmentDateTime = new Date(`${date}T${start_time}`);
+    const currentDateTime = new Date();
+    if (appointmentDateTime < currentDateTime) {
+        return res.status(400).json({
+            success: false,
+            message: 'Cannot book an appointment in the past.'
+        });
+    }
     const days=['sun','mon','tue','wed','thu','fri','sat'];
     const day=days[new Date(date).getDay()];
     var conn;
