@@ -1,8 +1,10 @@
 const {connectionPool}=require('../database_access');
 
-async function bookAppointment(req,res){
-    const {id : receptionist_id}=req.user;
-    const {patient_id,doctor_id,room_id,date,start_time,end_time,request_id}=req.body;
+async function bookAppointment(req, res) {
+    const { id: receptionist_id } = req.user;
+    const { patient_id, doctor_id, room_id, date, start_time, end_time, request_id } = req.body;
+    
+    // 1. Time Validation
     const appointmentDateTime = new Date(`${date}T${start_time}`);
     const currentDateTime = new Date();
     if (appointmentDateTime < currentDateTime) {
@@ -11,15 +13,18 @@ async function bookAppointment(req,res){
             message: 'Cannot book an appointment in the past.'
         });
     }
-    const days=['sun','mon','tue','wed','thu','fri','sat'];
-    const day=days[new Date(date).getDay()];
+
+    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const day = days[new Date(date).getDay()];
     var conn;
-    try{
-        conn=await connectionPool.getConnection();
+
+    try {
+        conn = await connectionPool.getConnection();
         await conn.beginTransaction();
 
-        const [result]=await conn.query(`
-            insert into appointment (patient_id,doctor_id,room_id,start_time,end_time,receptionist_id,appointment_date)
+        // 2. Insert Appointment (The Trigger fires automatically after this succeeds!)
+        const [apptResult] = await conn.query(`
+            insert into appointment (patient_id, doctor_id, room_id, start_time, end_time, receptionist_id, appointment_date)
             select ?,?,?,?,?,?,?
             where exists ( select 1 from doctor_schedule 
                 where doctor_id=? and day_of_week=? 
@@ -28,51 +33,53 @@ async function bookAppointment(req,res){
                 where doctor_id=? and appointment_date=? and start_time<? and end_time>? and status='scheduled'
             ) and not exists ( select 1 from appointment
                 where room_id=? and appointment_date=? and start_time<? and end_time>? and status='scheduled')`,
-            [patient_id,doctor_id,room_id,start_time,end_time,receptionist_id,date,doctor_id,day,start_time,end_time,doctor_id,date,end_time,start_time,room_id,date,end_time,start_time]);
-        if(result.affectedRows===0)
-        {
+            [patient_id, doctor_id, room_id, start_time, end_time, receptionist_id, date, doctor_id, day, start_time, end_time, doctor_id, date,
+                end_time, start_time, room_id, date, end_time, start_time]
+        );
+
+        if (apptResult.affectedRows === 0) {
             await conn.rollback();
             return res.status(409).json({
-                success : false,
-                message : 'No available slot found or booked by another receptionist'
+                success: false,
+                message: 'No available slot found or booked by another receptionist'
             });
         }
 
-        
-        if(request_id){
-            const [result]=await conn.query(
+        // 3. Resolve Request (if applicable)
+        if (request_id) {
+            // Renamed to reqResult to avoid overwriting apptResult
+            const [reqResult] = await conn.query(
                 `update requests set status='approved',
                 resolved_by=? where req_id=? and status='pending'`,
-                [receptionist_id,request_id]);
-            if(result.affectedRows===0)
-            {
+                [receptionist_id, request_id]
+            );
+
+            if (reqResult.affectedRows === 0) {
                 await conn.rollback();
                 return res.status(409).json({
-                    success : false,
-                    message : 'Request was already approved by another receptionist or does not exist'
+                    success: false,
+                    message: 'Request was already approved by another receptionist or does not exist'
                 });
             }
         }
 
-        const appointment_id=result.insertId;
-        await conn.query(`
-            insert into audit (appointment_id,action) values (?,?)    
-        `,[appointment_id,`Booked an appointment for Patient patient_id:${patient_id} with Doctor doctor_id:${doctor_id} by Receptionist receptionist_id:${receptionist_id}`]);
+        // 4. Commit Transaction
         await conn.commit();
 
         return res.status(200).json({
-            success : true,
-            message : 'Successfully booked appointment'
+            success: true,
+            message: 'Successfully booked appointment'
         });
-    }catch(err){
-        await conn.rollback();
+
+    } catch (err) {
+        if (conn) await conn.rollback();
         console.log(err);
         return res.status(500).json({
-            success : false,
-            message : 'Some error occured while making appointment. Please try again.'
+            success: false,
+            message: 'Some error occured while making appointment. Please try again.'
         });
-    }finally{
-        conn.release();
+    } finally {
+        if (conn) conn.release();
     }
 }
 
