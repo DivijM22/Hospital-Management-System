@@ -15,7 +15,7 @@ const port=3000;
 app.use(express.json());
 app.use(express.urlencoded({extended : true}));
 app.use(cors({
-    origin : ['http://localhost:5173',process.env.FRONTEND_URL],
+    origin : process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials : true
 }));
 app.use(cookieParser());
@@ -23,6 +23,8 @@ app.use('/api/auth',authRouter);
 app.use('/api/doctor',doctorRouter);
 app.use('/api/receptionist',receptionistRouter);
 app.use('/api/patient',patientRouter);
+
+console.log(process.env.FRONTEND_URL);
 
 app.get('/patients',handleAuth,handleAccess,async (req,res)=>{
     try{
