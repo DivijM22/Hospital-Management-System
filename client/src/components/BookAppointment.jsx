@@ -57,7 +57,7 @@ export default function BookAppointment() {
         setLoading(true);
         try {
             const res = await fetchWithAuth({
-                url: `http://localhost:3000/api/patient/patients?searchQuery=${encodeURIComponent(search)}`,
+                url: `${import.meta.env.VITE_SERVER_URL}/patient/patients?searchQuery=${encodeURIComponent(search)}`,
                 method: 'GET', accessToken, setAccessToken, navigate,
                 options: { withCredentials: true }
             });
@@ -72,7 +72,7 @@ export default function BookAppointment() {
     async function fetchDoctors(deptId) {
         setLoading(true);
         try {
-            const url = `http://localhost:3000/api/doctor/doctors${deptId ? `?dept=${deptId}` : ''}`;
+            const url = `${import.meta.env.VITE_SERVER_URL}/doctor/doctors${deptId ? `?dept=${deptId}` : ''}`;
             const res = await fetchWithAuth({
                 url, method: 'GET', accessToken, setAccessToken, navigate,
                 options: { withCredentials: true }
@@ -90,7 +90,7 @@ export default function BookAppointment() {
         setLoading(true);
         try {
             const res = await fetchWithAuth({
-                url: `http://localhost:3000/api/doctor/slots/available?doctor_id=${doctorId}&date=${selectedDate}`,
+                url: `${import.meta.env.VITE_SERVER_URL}/doctor/slots/available?doctor_id=${doctorId}&date=${selectedDate}`,
                 method: 'GET', accessToken, setAccessToken, navigate,
                 options: { withCredentials: true }
             });
@@ -106,7 +106,7 @@ export default function BookAppointment() {
         setLoading(true);
         try {
             const res = await fetchWithAuth({
-                url: `http://localhost:3000/api/receptionist/rooms/available?start_time=${startTime}&end_time=${endTime}&date=${selectedDate}`,
+                url: `${import.meta.env.VITE_SERVER_URL}/receptionist/rooms/available?start_time=${startTime}&end_time=${endTime}&date=${selectedDate}`,
                 method: 'GET', accessToken, setAccessToken, navigate,
                 options: { withCredentials: true }
             });
@@ -123,7 +123,7 @@ export default function BookAppointment() {
         setError('');
         try {
             await fetchWithAuth({
-                url: 'http://localhost:3000/api/receptionist/appointment',
+                url: `${import.meta.env.VITE_SERVER_URL}/receptionist/appointment`,
                 method: 'POST', accessToken, setAccessToken, navigate,
                 body: {
                     patient_id: selectedPatient.user_id,
@@ -170,7 +170,7 @@ export default function BookAppointment() {
                 try {
                     // 1. Get pending requests
                     const reqsRes = await fetchWithAuth({
-                        url: 'http://localhost:3000/api/receptionist/requests?status=pending',
+                        url: `${import.meta.env.VITE_SERVER_URL}/receptionist/requests?status=pending`,
                         method: 'GET', accessToken, setAccessToken, navigate,
                         options: { withCredentials: true }
                     });
@@ -181,12 +181,12 @@ export default function BookAppointment() {
                         // 2. Fetch patient and doctor details
                         const [patientRes, doctorRes] = await Promise.all([
                             fetchWithAuth({
-                                url: `http://localhost:3000/api/patient/patients?patient_id=${matchedReq.patient_id}`,
+                                url: `${import.meta.env.VITE_SERVER_URL}/patient/patients?patient_id=${matchedReq.patient_id}`,
                                 method: 'GET', accessToken, setAccessToken, navigate,
                                 options: { withCredentials: true }
                             }),
                             fetchWithAuth({
-                                url: `http://localhost:3000/api/doctor/doctors?doctor_id=${matchedReq.doctor_id}`,
+                                url: `${import.meta.env.VITE_SERVER_URL}/doctor/doctors?doctor_id=${matchedReq.doctor_id}`,
                                 method: 'GET', accessToken, setAccessToken, navigate,
                                 options: { withCredentials: true }
                             })

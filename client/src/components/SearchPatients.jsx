@@ -13,7 +13,7 @@ export default function SearchPatient()
     async function fetchSearchResults(searchQuery)
     {
         const res=await fetchWithAuth({
-            url : `http://localhost:3000/api/patient/patients?searchQuery=${searchQuery}`,
+            url : `${import.meta.env.VITE_SERVER_URL}/patient/patients?searchQuery=${searchQuery}`,
             method : 'GET',
             accessToken,
             setAccessToken,

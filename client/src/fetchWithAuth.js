@@ -20,7 +20,7 @@ export default async function fetchWithAuth({url,accessToken,setAccessToken,navi
         const error=httpErrorHandler(err);
         if(error.status===401){
             try{
-                const refreshRes=await axios.get("http://localhost:3000/api/auth/refresh",{withCredentials : true});
+                const refreshRes=await axios.get(`${import.meta.env.VITE_SERVER_URL}/auth/refresh`,{withCredentials : true});
                 console.log(refreshRes.data);
                 const newAccessToken=refreshRes.data.accessToken;
                 setAccessToken(newAccessToken);
@@ -29,7 +29,7 @@ export default async function fetchWithAuth({url,accessToken,setAccessToken,navi
                 return res.data;
             }catch(refreshErr){
                 alert("Cannot refresh user session. Please log in again.");
-                await fetchWithAuth({url : 'http://localhost:3000/api/auth/logout',method : 'GET', accessToken,setAccessToken,navigate,options :{
+                await fetchWithAuth({url : `${import.meta.env.VITE_SERVER_URL}/auth/logout`,method : 'GET', accessToken,setAccessToken,navigate,options :{
                     withCredentials : true
                 }});
                 setAccessToken(null);

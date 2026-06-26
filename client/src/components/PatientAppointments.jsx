@@ -12,7 +12,7 @@ export default function PatientAppointments() {
 
         async function fetchData() {
             const { data } = await fetchWithAuth({
-                url: 'http://localhost:3000/api/patient/appointments',
+                url: `${import.meta.env.VITE_SERVER_URL}/patient/appointments`,
                 accessToken,
                 setAccessToken,
                 navigate,

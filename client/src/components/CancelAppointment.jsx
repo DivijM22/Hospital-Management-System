@@ -29,7 +29,7 @@ export default function CancelAppointment() {
         setError('');
         try {
             const res = await fetchWithAuth({
-                url: `http://localhost:3000/api/receptionist/appointments?patient_name=${encodeURIComponent(search)}`,
+                url: `${import.meta.env.VITE_SERVER_URL}/receptionist/appointments?patient_name=${encodeURIComponent(search)}`,
                 method: 'GET', accessToken, setAccessToken, navigate,
                 options: { withCredentials: true }
             });
@@ -51,7 +51,7 @@ export default function CancelAppointment() {
         setError('');
         try {
             const res = await fetchWithAuth({
-                url: `http://localhost:3000/api/receptionist/appointment/${selectedAppointment.appointment_id}/cancel`,
+                url: `${import.meta.env.VITE_SERVER_URL}/receptionist/appointment/${selectedAppointment.appointment_id}/cancel`,
                 method: 'PATCH', accessToken, setAccessToken, navigate, body: {},
                 options: { withCredentials: true }
             });

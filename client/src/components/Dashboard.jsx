@@ -14,7 +14,7 @@ export default function Dashboard(){
     async function handleLogout()
     {
         await fetchWithAuth({
-            url : 'http://localhost:3000/api/auth/logout',
+            url : `${import.meta.env.VITE_SERVER_URL}/auth/logout`,
             method : 'GET',
             accessToken,
             setAccessToken,

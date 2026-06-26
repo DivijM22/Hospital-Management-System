@@ -19,7 +19,7 @@ export default function DoctorDashboard(){
     async function fetchAppointments()
     {
         const res=await fetchWithAuth({
-            url : 'http://localhost:3000/api/doctor/appointments',
+            url : `${import.meta.env.VITE_SERVER_URL}/doctor/appointments`,
             method : 'GET',
             accessToken,
             setAccessToken,

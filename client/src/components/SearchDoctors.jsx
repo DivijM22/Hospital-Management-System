@@ -15,7 +15,7 @@ export default function SearchDoctors(){
 
     async function fetchDoctor(searchQuery=null,dept=null)
     {
-        var url='http://localhost:3000/api/doctor/doctors';
+        var url=`${import.meta.env.VITE_SERVER_URL}/doctor/doctors`;
         const params=[];
         if(searchQuery)
             params.push(`searchQuery=${searchQuery}`);
@@ -40,7 +40,7 @@ export default function SearchDoctors(){
     async function fetchDoctorSchedule()
     {
         const res=await fetchWithAuth({
-            url : `http://localhost:3000/api/doctor/schedule/${selectedDoctor.doctor_id}`,
+            url : `${import.meta.env.VITE_SERVER_URL}/doctor/schedule/${selectedDoctor.doctor_id}`,
             method : 'GET',
             accessToken,
             setAccessToken,
@@ -74,7 +74,7 @@ export default function SearchDoctors(){
     {
         try{
             const res=await fetchWithAuth({
-                url : 'http://localhost:3000/api/patient/request',
+                url : `${import.meta.env.VITE_SERVER_URL}/patient/request`,
                 method : 'POST',
                 accessToken,
                 setAccessToken,

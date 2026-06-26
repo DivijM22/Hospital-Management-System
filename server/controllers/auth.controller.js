@@ -125,8 +125,6 @@ async function registerStaff(req,res){
 }
 
 async function loginUser(req,res){
-    console.log("Login route hit!");
-    console.log(req.body);
     try{
         const {formData}=req.body;
         const {email,password}=formData;

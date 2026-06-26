@@ -34,7 +34,7 @@ export default function RescheduleAppointment() {
         setError('');
         try {
             const res = await fetchWithAuth({
-                url: `http://localhost:3000/api/receptionist/appointments?patient_name=${encodeURIComponent(search)}`,
+                url: `${import.meta.env.VITE_SERVER_URL}/receptionist/appointments?patient_name=${encodeURIComponent(search)}`,
                 method: 'GET', accessToken, setAccessToken, navigate,
                 options: { withCredentials: true }
             });
@@ -55,7 +55,7 @@ export default function RescheduleAppointment() {
         setError('');
         try {
             const res = await fetchWithAuth({
-                url: `http://localhost:3000/api/doctor/slots/available?doctor_id=${doctorId}&date=${selectedDate}`,
+                url: `${import.meta.env.VITE_SERVER_URL}/doctor/slots/available?doctor_id=${doctorId}&date=${selectedDate}`,
                 method: 'GET', accessToken, setAccessToken, navigate,
                 options: { withCredentials: true }
             });
@@ -72,7 +72,7 @@ export default function RescheduleAppointment() {
         setError('');
         try {
             const res = await fetchWithAuth({
-                url: `http://localhost:3000/api/receptionist/appointment/${selectedAppointment.appointment_id}/reschedule`,
+                url: `${import.meta.env.VITE_SERVER_URL}/receptionist/appointment/${selectedAppointment.appointment_id}/reschedule`,
                 method: 'PATCH', accessToken, setAccessToken, navigate,
                 body: {
                     date,

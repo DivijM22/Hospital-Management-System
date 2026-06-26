@@ -38,13 +38,13 @@ export default function PatientDashboard(){
 
         try{
             const [upcomingRes,completedRes,missedRes,userInfoRes,appointmentRes,upcomingAppointmentRes,completedAppointmentRes]=await Promise.all([
-                helper('http://localhost:3000/api/patient/appointments/count/upcoming'),
-                helper('http://localhost:3000/api/patient/appointments/count/completed'),
-                helper('http://localhost:3000/api/patient/appointments/count/missed'),
-                helper('http://localhost:3000/api/me'),
-                helper('http://localhost:3000/api/patient/appointments'),
-                helper("http://localhost:3000/api/patient/appointments?status=scheduled"),
-                helper("http://localhost:3000/api/patient/appointments?status=completed")
+                helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments/count/upcoming`),
+                helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments/count/completed`),
+                helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments/count/missed`),
+                helper(`${import.meta.env.VITE_SERVER_URL}/me`),
+                helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments`),
+                helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments?status=scheduled`),
+                helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments?status=completed`)
             ]);
             console.log(upcomingRes);
             console.log(completedRes);

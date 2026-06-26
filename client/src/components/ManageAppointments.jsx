@@ -60,7 +60,7 @@ function AppointmentTable(props) {
                             try{
                               console.log(apt);
                               const res=await fetchWithAuth({
-                                url : `http://localhost:3000/api/doctor/appointments/${apt.appointment_id}`,
+                                url : `${import.meta.env.VITE_SERVER_URL}/doctor/appointments/${apt.appointment_id}`,
                                 method : 'PATCH',
                                 accessToken,
                                 setAccessToken,
@@ -85,7 +85,7 @@ function AppointmentTable(props) {
                               async()=>{
                                 try{
                                   const res=await fetchWithAuth({
-                                    url : `http://localhost:3000/api/doctor/appointments/${apt.appointment_id}`,
+                                    url : `${import.meta.env.VITE_SERVER_URL}/doctor/appointments/${apt.appointment_id}`,
                                     method : 'PATCH',
                                     accessToken,
                                     setAccessToken,
@@ -153,11 +153,11 @@ export default function ManageAppointments() {
     }
     const [scheduledRes,pastRes]=await Promise.all([
         await fetchWithAuth({
-            url : 'http://localhost:3000/api/doctor/appointments?status=scheduled',
+            url : `${import.meta.env.VITE_SERVER_URL}/doctor/appointments?status=scheduled`,
             ...config
           }),
         await fetchWithAuth({
-            url : 'http://localhost:3000/api/doctor/appointments?status=past',
+            url : `${import.meta.env.VITE_SERVER_URL}/doctor/appointments?status=past`,
             ...config
         })]);
     console.log(scheduledRes);

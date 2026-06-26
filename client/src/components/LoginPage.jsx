@@ -32,7 +32,7 @@ export default function LoginPage() {
     {
       try{
         if(mode==="login"){
-          const loginRes=await axios.post("http://localhost:3000/api/auth/login",{formData},{
+          const loginRes=await axios.post(`${import.meta.env.VITE_SERVER_URL}/auth/login`,{formData},{
             withCredentials : true,
             headers:{
               'Content-Type' : 'application/json',
@@ -41,7 +41,7 @@ export default function LoginPage() {
           const {data}=loginRes;
           setAccessToken(data.accessToken);
         }else{
-          const signUpRes=await axios.post("http://localhost:3000/api/auth/register",{formData},{
+          const signUpRes=await axios.post(`${import.meta.env.VITE_SERVER_URL}/auth/register`,{formData},{
             withCredentials : true,
             headers : {
               'Content-Type' : 'application/json'

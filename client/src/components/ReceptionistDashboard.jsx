@@ -30,7 +30,7 @@ export default function ReceptionistDashboard() {
 
     async function fetchAppointments() {
         const { data } = await fetchWithAuth({
-            url: 'http://localhost:3000/api/receptionist/appointments',
+            url: `${import.meta.env.VITE_SERVER_URL}/receptionist/appointments`,
             method: 'GET',
             accessToken,
             setAccessToken,
@@ -42,7 +42,7 @@ export default function ReceptionistDashboard() {
 
     async function fetchRequests() {
         const { data } = await fetchWithAuth({
-            url: 'http://localhost:3000/api/receptionist/requests?status=pending',
+            url: `${import.meta.env.VITE_SERVER_URL}/receptionist/requests?status=pending`,
             method: 'GET',
             accessToken,
             setAccessToken,
@@ -63,12 +63,12 @@ export default function ReceptionistDashboard() {
                     requests.map(async (req) => {
                         const [patientRes, doctorRes] = await Promise.all([
                             fetchWithAuth({
-                                url: `http://localhost:3000/api/patient/patients?patient_id=${req.patient_id}`,
+                                url: `${import.meta.env.VITE_SERVER_URL}/patient/patients?patient_id=${req.patient_id}`,
                                 method: 'GET', accessToken, setAccessToken, navigate,
                                 options: { withCredentials: true }
                             }),
                             fetchWithAuth({
-                                url: `http://localhost:3000/api/doctor/doctors?doctor_id=${req.doctor_id}`,
+                                url: `${import.meta.env.VITE_SERVER_URL}/doctor/doctors?doctor_id=${req.doctor_id}`,
                                 method: 'GET', accessToken, setAccessToken, navigate,
                                 options: { withCredentials: true }
                             })
@@ -103,7 +103,7 @@ export default function ReceptionistDashboard() {
 
         try {
             const response = await fetchWithAuth({
-                url: `http://localhost:3000/api/receptionist/request/reject`,
+                url: `${import.meta.env.VITE_SERVER_URL}/receptionist/request/reject`,
                 method: 'PATCH',
                 body: { id: requestId }, 
                 accessToken,

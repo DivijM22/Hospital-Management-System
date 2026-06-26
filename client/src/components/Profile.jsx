@@ -12,7 +12,7 @@ export default function Profile(){
     async function fetchUserInfo()
     {
         const res=await fetchWithAuth({
-            url : 'http://localhost:3000/api/me',
+            url : `${import.meta.env.VITE_SERVER_URL}/me`,
             method : 'GET',
             accessToken,
             setAccessToken,
@@ -28,7 +28,7 @@ export default function Profile(){
     async function patchUserInfo()
     {
         const res=await fetchWithAuth({
-            url : 'http://localhost:3000/api/me/edit',
+            url : `${import.meta.env.VITE_SERVER_URL}/me/edit`,
             method : 'PATCH',
             accessToken,
             setAccessToken,

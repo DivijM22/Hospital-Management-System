@@ -11,7 +11,7 @@ export default function App(){
         async function fetchData()
         {
             try{
-                const refreshRes=await axios.get('http://localhost:3000/api/auth/refresh',{withCredentials : true});
+                const refreshRes=await axios.get(`${import.meta.env.VITE_SERVER_URL}/auth/refresh`,{withCredentials : true});
                 const {data}=refreshRes;
                 setAccessToken(data.accessToken);
             }catch(err){
