@@ -138,6 +138,7 @@ export default function PatientDashboard(){
                                         room_number={value?.room_number}
                                         room_type={value?.room_type}
                                         appointment_date={value?.appointment_date}
+                                        status={value?.status}
                                         />
                                     }) : ((mode==="upcoming")  ? upcoming?.map((value,index)=>{
                                           return <AppointmentCard key={index}
@@ -149,6 +150,7 @@ export default function PatientDashboard(){
                                         room_number={value?.room_number}
                                         room_type={value?.room_type}
                                         appointment_date={value?.appointment_date}
+                                        status={value?.status}
                                         />
                                     }) : ( mode==="completed" && completed?.map((value,index)=>{
                                         return <AppointmentCard key={index}
@@ -160,6 +162,7 @@ export default function PatientDashboard(){
                                         room_number={value?.room_number}
                                         room_type={value?.room_type}
                                         appointment_date={value?.appointment_date}
+                                        status={value?.status}
                                         />
                                     })))
                                 }

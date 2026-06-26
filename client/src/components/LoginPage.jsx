@@ -3,6 +3,7 @@ import {useState,useEffect} from 'react';
 import {useOutletContext,useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import httpErrorHandler from "../httpErrorHandler";
+import { Activity } from 'lucide-react';
 
 export default function LoginPage() {
   const [mode, setMode] = useState("login");
@@ -16,8 +17,8 @@ export default function LoginPage() {
     dob : "",
     submitted : false
   });
-  const greenBG = "bg-gradient-to-br from-[#1E6966] to-[#15514E]";
-  const grayBG = "bg-gray-100";
+  const meshBG = "mesh-gradient";
+  const grayBG = "bg-slate-50/50";
   const navigate=useNavigate();
 
   useEffect(()=>{
@@ -50,7 +51,11 @@ export default function LoginPage() {
           setMode("login");
         }
       }catch(err){
-        const error=httpErrorHandler(err);
+          console.log(err);
+          console.log(err.message);
+          console.log(err.code);
+          console.log(err.response);
+          const error=httpErrorHandler(err);
         if(err.status===401)
         {
           setFormData(prev=>({
@@ -71,57 +76,78 @@ export default function LoginPage() {
   },[formData.submitted]);
 
   return (
-    <div className="min-h-screen w-full flex">
+    <div className="min-h-screen w-full flex bg-slate-50">
 
       {/* LEFT PANEL */}
-      <div className={`w-1/2 flex items-center justify-center relative overflow-hidden ${mode === "signup" ? greenBG : grayBG}`}>
+      <div className={`w-1/2 flex items-center justify-center relative overflow-hidden transition-all duration-500 ${mode === "signup" ? meshBG : grayBG}`}>
         {mode === "signup" ? (
           <>
-          <div className="absolute w-72 h-72 bg-white/10 rounded-full top-[-50px] left-[-50px]" />
-          <div className="absolute w-96 h-96 bg-white/5 rounded-full bottom-[-100px] right-[-100px]" />
-          <div className="w-2/3 flex flex-col gap-6 text-white z-10">
-            <h2 className="text-lg opacity-80">🏥 HMS</h2>
-            <h1 className="text-4xl font-bold">Welcome Back 👋</h1>
-            <p className="text-white/70 text-sm">
-              Pick up where you left off!
-            </p>
+            {/* Glowing floating decorative shapes */}
+            <div className="absolute w-80 h-80 bg-teal-400/10 rounded-full blur-2xl top-[-100px] left-[-100px] animate-float-slow" />
+            <div className="absolute w-96 h-96 bg-emerald-300/10 rounded-full blur-3xl bottom-[-150px] right-[-100px] animate-float-slower" />
+            
+            <div className="w-2/3 flex flex-col gap-6 text-white z-10">
+              <div className="flex items-center gap-2">
+                <div className="bg-white/10 p-2 rounded-xl border border-white/15 text-teal-300">
+                  <Activity size={24} className="animate-pulse" />
+                </div>
+                <h2 className="text-lg font-bold tracking-wider">HMS Care</h2>
+              </div>
+              
+              <h1 className="text-5xl font-extrabold tracking-tight mt-4 leading-tight">Welcome Back 👋</h1>
+              <p className="text-white/80 text-base leading-relaxed font-light">
+                Sign in to continue managing your medical schedules, records, and appointments effortlessly.
+              </p>
 
-            <button
-              onClick={() => setMode("login")}
-              className="mt-4 px-6 py-2 rounded-full border border-white/40 hover:bg-white hover:text-[#1E6966]"
-            >
-              Go to Log in
-            </button>
-          </div>
+              <button
+                onClick={() => setMode("login")}
+                className="mt-6 self-start px-8 py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white hover:text-teal-950 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all font-medium text-sm text-white"
+              >
+                Sign In Instead
+              </button>
+            </div>
           </>
         ) : (
-          <UserForm mode="login" formData={formData} setFormData={setFormData}/>
+          <div className="w-full flex items-center justify-center p-6 z-10">
+            <UserForm mode="login" formData={formData} setFormData={setFormData}/>
+          </div>
         )}
       </div>
 
       {/* RIGHT PANEL */}
-      <div className={`w-1/2 flex items-center relative justify-center ${mode === "signup" ? grayBG : greenBG}`}>
+      <div className={`w-1/2 flex items-center relative justify-center overflow-hidden transition-all duration-500 ${mode === "signup" ? grayBG : meshBG}`}>
 
         {mode === "signup" ? (
-          <UserForm mode="signup" formData={formData} setFormData={setFormData}/>
+          <div className="w-full flex items-center justify-center p-6 z-10">
+            <UserForm mode="signup" formData={formData} setFormData={setFormData}/>
+          </div>
         ) : (
           <>
-          <div className="absolute w-72 h-72 bg-white/10 rounded-full top-[-50px] left-[-50px]" />
-          <div className="absolute w-96 h-96 bg-white/5 rounded-full bottom-[-100px] right-[-100px]" />
-          <div className="w-2/3 flex flex-col gap-6 text-white">
-            <h2 className="text-lg opacity-80">🏥 HMS</h2>
-            <h1 className="text-4xl font-bold">New Here?</h1>
-            <p className="text-white/70 text-sm">
-              Create an account to get started.
-            </p>
+            {/* Glowing floating decorative shapes */}
+            <div className="absolute w-80 h-80 bg-emerald-400/10 rounded-full blur-2xl top-[-100px] left-[-100px] animate-float-slower" />
+            <div className="absolute w-96 h-96 bg-teal-300/10 rounded-full blur-3xl bottom-[-150px] right-[-100px] animate-float-slow" />
+            
+            <div className="w-2/3 flex flex-col gap-6 text-white z-10">
+              <div className="flex items-center gap-2">
+                <div className="bg-white/10 p-2 rounded-xl border border-white/15 text-teal-300">
+                  <Activity size={24} className="animate-pulse" />
+                </div>
+                <h2 className="text-lg font-bold tracking-wider">HMS Care</h2>
+              </div>
+              
+              <h1 className="text-5xl font-extrabold tracking-tight mt-4 leading-tight">New Here?</h1>
+              <p className="text-white/80 text-base leading-relaxed font-light">
+                Join our comprehensive digital care system. Sign up now to request appointments, consult top doctors, and view your history.
+              </p>
 
-            <button
-              onClick={() => setMode("signup")}
-              className="mt-4 px-6 py-2 rounded-full border border-white/40 hover:bg-white hover:text-[#1E6966]"
-            >
-              Go to Signup
-            </button>
-          </div></>
+              <button
+                onClick={() => setMode("signup")}
+                className="mt-6 self-start px-8 py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white hover:text-teal-950 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all font-medium text-sm text-white"
+              >
+                Create Account
+              </button>
+            </div>
+          </>
         )}
       </div>
 

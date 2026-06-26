@@ -14,3 +14,5 @@ build/
 # Database dumps and sensitive scripts
 hospital_db.sql
 server/seedAdmin.js
+
+start.sh
