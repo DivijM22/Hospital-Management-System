@@ -43,7 +43,7 @@ export default function PatientDashboard(){
                 helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments/count/missed`),
                 helper(`${import.meta.env.VITE_SERVER_URL}/me`),
                 helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments`),
-                helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments?status=scheduled`),
+                helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments?status=upcoming`),
                 helper(`${import.meta.env.VITE_SERVER_URL}/patient/appointments?status=completed`)
             ]);
             console.log(upcomingRes);
